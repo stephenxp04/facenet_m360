@@ -5,6 +5,9 @@ from PIL import Image
 import json
 import base64
 from subprocess import call
+import face
+import cv2
+import numpy as np
 
 app = Flask(__name__)
 enrol = None
@@ -37,6 +40,7 @@ def enrol():
             print('POST /enrol success!')
             #print(request.data)
 
+        face_detection = face.Detection()
         #string = json.dumps(request.data)
         image_file = json.loads(request.data)
         name = image_file['id']
@@ -46,15 +50,34 @@ def enrol():
 
         count = 0
         for images in image_file['data']:
-            imgdata = base64.b64decode(images)
             filename = name + str(count)
-            with open(os.path.join(save_path+name+'/'+filename+'.jpg'), 'wb') as f:
-                f.write(imgdata)
-            count = count + 1
 
-        call('./retrain.sh')
+            img = base64.b64decode(images)
+            img_array = np.fromstring(img, np.uint8)
+            imgdata = cv2.imdecode(img_array, cv2.IMREAD_COLOR)
+            #if not os.path.exists(os.path.join('/tmp/'+name)):
+            #    os.mkdir(os.path.join('/tmp/'+name))
+            #with open(os.path.join('/tmp/'+name+'/'+filename+'.jpg'), 'wb') as f:
+            #    f.write(img)
 
-        return json.dumps(image_file)
+            #img = cv2.imread(f.name, cv2.IMREAD_COLOR)
+            faces = face_detection.find_faces(imgdata)
+
+            if len(faces) == 1:
+                frame = faces[0].image
+                #cv2.imshow('Enrolling', frame)
+                #cv2.setWindowTitle('Enrolling', str(args.name) + " " + str(count+1))
+                #cv2.putText(faces[0].image, 'Image: ' + str(frame_count+1), (0, 0), cv2.FONT_HERSHEY_SIMPLEX, 1,
+                #            (255, 0, 0), thickness=2, lineType=2)
+                rgb_frame = frame[:, :, ::-1]
+                img = Image.fromarray(rgb_frame, "RGB")
+                if img is not None:
+                    img.save(os.path.join(save_path+name+'/'+filename+".jpg"))
+                count += 1
+
+        #call('./retrain.sh')
+
+        return "enrol done"
 
     except Exception as e:
         print('POST /enrol error : %s' % e)
@@ -70,6 +93,6 @@ def favicon():
                                'favicon.ico', mimetype='image/vnd.microsoft.icon')
 
 if __name__ == '__main__':
-    app.run(host='0.0.0.0')
-    #app.run(host='0.0.0.0', port=80, debug=True, ssl_context=('adhoc'))
+    #app.run(host='0.0.0.0')
+    app.run(host='0.0.0.0', debug=True, threaded=True)
 

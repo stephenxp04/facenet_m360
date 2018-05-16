@@ -2,13 +2,7 @@
 <project version="4">
   <component name="ChangeListManager">
     <list default="true" id="c25dfb56-9d4f-4d15-be02-9809751067c2" name="Default" comment="">
-      <change afterPath="$PROJECT_DIR$/contributed/appengine_config.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/contributed/wsgi.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/contributed/__init__.py" beforeDir="false" afterPath="$PROJECT_DIR$/contributed/__init__.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/contributed/batch_represent.py" beforeDir="false" afterPath="$PROJECT_DIR$/contributed/batch_represent.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/contributed/face.py" beforeDir="false" afterPath="$PROJECT_DIR$/contributed/face.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/contributed/real_time_face_recognition.py" beforeDir="false" afterPath="$PROJECT_DIR$/contributed/real_time_face_recognition.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/align/align_dataset_mtcnn.py" beforeDir="false" afterPath="$PROJECT_DIR$/src/align/align_dataset_mtcnn.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/contributed/main.py" beforeDir="false" afterPath="$PROJECT_DIR$/contributed/main.py" afterDir="false" />
     </list>
     <option name="EXCLUDED_CONVERTED_TO_IGNORED" value="true" />
     <option name="TRACKING_ENABLED" value="true" />
@@ -22,20 +16,14 @@
   </component>
   <component name="FileEditorManager">
     <leaf SIDE_TABS_SIZE_LIMIT_KEY="300">
-      <file leaf-file-name="real_time_ip_webcam.py" pinned="false" current-in-tab="false">
-        <entry file="file://$PROJECT_DIR$/contributed/real_time_ip_webcam.py">
-          <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="15">
-              <caret line="26" column="14" selection-start-line="26" selection-start-column="14" selection-end-line="26" selection-end-column="14" />
-            </state>
-          </provider>
-        </entry>
-      </file>
       <file leaf-file-name="real_time_face_recognition.py" pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/contributed/real_time_face_recognition.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="470">
-              <caret line="64" column="37" selection-start-line="64" selection-start-column="37" selection-end-line="64" selection-end-column="37" />
+            <state relative-caret-position="525">
+              <caret line="35" column="42" selection-start-line="35" selection-start-column="42" selection-end-line="35" selection-end-column="42" />
+              <folding>
+                <element signature="e#1245#1260#0" expanded="true" />
+              </folding>
             </state>
           </provider>
         </entry>
@@ -55,8 +43,8 @@
       <file leaf-file-name="main.py" pinned="false" current-in-tab="true">
         <entry file="file://$PROJECT_DIR$/contributed/main.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="162">
-              <caret line="43" column="59" selection-start-line="43" selection-start-column="59" selection-end-line="43" selection-end-column="59" />
+            <state relative-caret-position="207">
+              <caret line="57" column="12" selection-start-line="57" selection-start-column="12" selection-end-line="57" selection-end-column="12" />
               <folding>
                 <element signature="e#0#80#0" expanded="true" />
               </folding>
@@ -81,6 +69,18 @@
           <provider selected="true" editor-type-id="text-editor">
             <state relative-caret-position="225">
               <caret line="15" selection-start-line="15" selection-end-line="15" />
+            </state>
+          </provider>
+        </entry>
+      </file>
+      <file leaf-file-name="enrol_face.py" pinned="false" current-in-tab="false">
+        <entry file="file://$PROJECT_DIR$/contributed/enrol_face.py">
+          <provider selected="true" editor-type-id="text-editor">
+            <state relative-caret-position="885">
+              <caret line="59" column="29" selection-start-line="59" selection-start-column="29" selection-end-line="59" selection-end-column="29" />
+              <folding>
+                <element signature="e#134#149#0" expanded="true" />
+              </folding>
             </state>
           </provider>
         </entry>
@@ -141,8 +141,8 @@
         <option value="$PROJECT_DIR$/contributed/__init__.py" />
         <option value="$PROJECT_DIR$/contributed/appengine_config.py" />
         <option value="$PROJECT_DIR$/contributed/app.yaml" />
-        <option value="$PROJECT_DIR$/contributed/main.py" />
         <option value="$PROJECT_DIR$/contributed/wsgi.py" />
+        <option value="$PROJECT_DIR$/contributed/main.py" />
       </list>
     </option>
   </component>
@@ -155,9 +155,9 @@
   <component name="NodePackageJsonFileManager">
     <packageJsonPaths />
   </component>
-  <component name="ProjectFrameBounds" extendedState="1">
-    <option name="x" value="602" />
-    <option name="y" value="107" />
+  <component name="ProjectFrameBounds">
+    <option name="x" value="764" />
+    <option name="y" value="53" />
     <option name="width" value="1328" />
     <option name="height" value="930" />
   </component>
@@ -255,10 +255,10 @@
     <servers />
   </component>
   <component name="ToolWindowManager">
-    <frame x="602" y="107" width="1328" height="930" extended-state="1" />
+    <frame x="764" y="53" width="1328" height="930" extended-state="0" />
     <editor active="true" />
     <layout>
-      <window_info content_ui="combo" id="Project" order="0" visible="true" weight="0.24904214" />
+      <window_info active="true" content_ui="combo" id="Project" order="0" visible="true" weight="0.24904214" />
       <window_info anchor="bottom" id="TODO" order="6" />
       <window_info anchor="bottom" id="Event Log" order="7" side_tool="true" />
       <window_info anchor="bottom" id="Find" order="1" weight="0.32916147" />
@@ -300,13 +300,6 @@
     </breakpoint-manager>
   </component>
   <component name="editorHistoryManager">
-    <entry file="file://$PROJECT_DIR$/contributed/real_time_ip_webcam.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="915">
-          <caret line="67" column="23" selection-start-line="67" selection-start-column="23" selection-end-line="67" selection-end-column="23" />
-        </state>
-      </provider>
-    </entry>
     <entry file="file://$USER_HOME$/.PyCharm2018.1/system/python_stubs/-1247972723/cv2/cv2/__init__.py" />
     <entry file="file://$PROJECT_DIR$/ip_webcam.py">
       <provider selected="true" editor-type-id="text-editor">
@@ -470,16 +463,6 @@
     <entry file="file://$PROJECT_DIR$/../tfObjWebrtc/server.py">
       <provider selected="true" editor-type-id="text-editor" />
     </entry>
-    <entry file="file://$PROJECT_DIR$/contributed/enrol_face.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="330">
-          <caret line="22" column="9" selection-start-line="22" selection-start-column="9" selection-end-line="22" selection-end-column="9" />
-          <folding>
-            <element signature="e#134#149#0" expanded="true" />
-          </folding>
-        </state>
-      </provider>
-    </entry>
     <entry file="file://$PROJECT_DIR$/../tfObjWebrtc/static/video.html">
       <provider selected="true" editor-type-id="text-editor" />
     </entry>
@@ -511,22 +494,6 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/contributed/real_time_face_recognition.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="470">
-          <caret line="64" column="37" selection-start-line="64" selection-start-column="37" selection-end-line="64" selection-end-column="37" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/../web-document-scanner/server.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state>
-          <folding>
-            <element signature="e#0#68#0" expanded="true" />
-          </folding>
-        </state>
-      </provider>
-    </entry>
     <entry file="file://$PROJECT_DIR$/contributed/templates/index.html">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="-285">
@@ -551,16 +518,6 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/contributed/appengine_config.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="225">
-          <caret line="15" selection-start-line="15" selection-end-line="15" />
-          <folding>
-            <element signature="e#0#39#0" expanded="true" />
-          </folding>
-        </state>
-      </provider>
-    </entry>
     <entry file="file://$PROJECT_DIR$/contributed/app.yaml">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="225">
@@ -575,10 +532,56 @@
         </state>
       </provider>
     </entry>
+    <entry file="file://$PROJECT_DIR$/contributed/lib/numpy/lib/tests/test_format.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="249">
+          <caret line="418" column="8" selection-start-line="418" selection-start-column="8" selection-end-line="418" selection-end-column="8" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/../web-document-scanner/server.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state>
+          <folding>
+            <element signature="e#0#68#0" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/contributed/enrol_face.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="885">
+          <caret line="59" column="29" selection-start-line="59" selection-start-column="29" selection-end-line="59" selection-end-column="29" />
+          <folding>
+            <element signature="e#134#149#0" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/contributed/appengine_config.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="225">
+          <caret line="15" selection-start-line="15" selection-end-line="15" />
+          <folding>
+            <element signature="e#0#39#0" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/contributed/real_time_face_recognition.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="525">
+          <caret line="35" column="42" selection-start-line="35" selection-start-column="42" selection-end-line="35" selection-end-column="42" />
+          <folding>
+            <element signature="e#1245#1260#0" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
     <entry file="file://$PROJECT_DIR$/contributed/main.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="162">
-          <caret line="43" column="59" selection-start-line="43" selection-start-column="59" selection-end-line="43" selection-end-column="59" />
+        <state relative-caret-position="207">
+          <caret line="57" column="12" selection-start-line="57" selection-start-column="12" selection-end-line="57" selection-end-column="12" />
           <folding>
             <element signature="e#0#80#0" expanded="true" />
           </folding>
