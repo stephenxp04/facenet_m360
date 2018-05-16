@@ -1,0 +1,6 @@
+arguments: src/train_softmax.py --logs_base_dir ./logs/train1 --models_base_dir ./models/train1 --pretrained_model ../tensorflow-for-poets-2/tf_files/models/facenet/20170511-185253/casia.pb --data_dir datasets/train_aligned --image_size 182 --learning_rate 0.001 --lfw_dir ../datasets/lfw/lfw_mtcnnpy_160 --optimizer RMSPROP --keep_probability 0.8 --random_crop --random_flip --weight_decay 5e-5 --center_loss_factor 1e-2 --center_loss_alfa 0.9
+--------------------
+tensorflow version: 1.6.0-dev20180204
+--------------------
+git hash: 28d3bf2fa7254037229035cac398632a5ef6fc24
+--------------------
