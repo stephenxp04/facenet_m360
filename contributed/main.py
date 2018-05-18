@@ -1,16 +1,15 @@
-from flask import Flask, render_template, request, Response, send_from_directory
-from enrol_face import Enrol
+from flask import Flask, render_template, request, Response, send_from_directory, redirect, url_for, jsonify
 import os
 from PIL import Image
 import json
 import base64
-from subprocess import call
-import face
 import cv2
 import numpy as np
+#from src import classifier
+import web_face_recognition
 
 app = Flask(__name__)
-enrol = None
+
 save_path = str('/home/m360/MachineLearning/my_dataset/train_aligned/')
 
 #for CORS
@@ -24,8 +23,7 @@ def after_request(response):
 
 @app.route('/')
 def index():
-    #return render_template('index.html')
-    return Response('Facial Recognition - Profile Enrolment')
+    return Response(os.getcwd())
 
 
 @app.route('/app')
@@ -33,15 +31,17 @@ def remote():
     return Response(open('./contributed/templates/index.html').read(), mimetype="text/html")
 
 
+@app.route('/recognition')
+def start():
+    return Response(open('./contributed/templates/recognition.html').read(), mimetype="text/html")
+
+
 @app.route('/enrol', methods=['POST'])
 def enrol():
     try:
         if request.method == 'POST':
             print('POST /enrol success!')
-            #print(request.data)
 
-        face_detection = face.Detection()
-        #string = json.dumps(request.data)
         image_file = json.loads(request.data)
         name = image_file['id']
 
@@ -55,37 +55,61 @@ def enrol():
             img = base64.b64decode(images)
             img_array = np.fromstring(img, np.uint8)
             imgdata = cv2.imdecode(img_array, cv2.IMREAD_COLOR)
-            #if not os.path.exists(os.path.join('/tmp/'+name)):
-            #    os.mkdir(os.path.join('/tmp/'+name))
-            #with open(os.path.join('/tmp/'+name+'/'+filename+'.jpg'), 'wb') as f:
-            #    f.write(img)
-
-            #img = cv2.imread(f.name, cv2.IMREAD_COLOR)
-            faces = face_detection.find_faces(imgdata)
+            faces = web_face_recognition.detect(imgdata)
 
             if len(faces) == 1:
                 frame = faces[0].image
-                #cv2.imshow('Enrolling', frame)
-                #cv2.setWindowTitle('Enrolling', str(args.name) + " " + str(count+1))
-                #cv2.putText(faces[0].image, 'Image: ' + str(frame_count+1), (0, 0), cv2.FONT_HERSHEY_SIMPLEX, 1,
-                #            (255, 0, 0), thickness=2, lineType=2)
                 rgb_frame = frame[:, :, ::-1]
                 img = Image.fromarray(rgb_frame, "RGB")
                 if img is not None:
                     img.save(os.path.join(save_path+name+'/'+filename+".jpg"))
                 count += 1
 
-        #call('./retrain.sh')
+                if count > 2000:
+                    return redirect(url_for('getStatus', name=name))
 
-        return "enrol done"
+        return redirect(url_for('getStatus', name=name))
 
     except Exception as e:
         print('POST /enrol error : %s' % e)
         return e
 
-@app.route('/recognition', methods=['POST'])
-def recognition():
-    return Response('Nothing')
+
+@app.route('/enrol/<name>')
+def getStatus(name):
+    try:
+        return jsonify(name + ' enrolled ' + web_face_recognition.enrol())
+        #return 'Test'
+
+    except Exception as e:
+        print('Enrolling failed : %s' % e)
+        return e
+
+
+@app.route('/recognition_result', methods=['POST'])
+def face_recognition():
+    try:
+        if request.method == 'POST':
+            print('POST /recognition_result success!')
+            #print(request.data)
+
+        # web_face_recognition.debug()
+        image_file = json.loads(request.data)
+        img = base64.b64decode(image_file['data'])
+        img_array = np.fromstring(img, np.uint8)
+        imgdata = cv2.imdecode(img_array, cv2.IMREAD_COLOR)
+        boxes = web_face_recognition.recognize(imgdata)
+        return boxes
+
+    except Exception as e:
+        print('Recognition failed : %s' % e)
+        return e
+
+
+@app.route('/loading.gif')
+def loading():
+    return send_from_directory(os.path.join(app.root_path, 'templates'),
+                               'loading.gif', mimetype='image/gif')
 
 @app.route('/favicon.ico')
 def favicon():
@@ -93,6 +117,5 @@ def favicon():
                                'favicon.ico', mimetype='image/vnd.microsoft.icon')
 
 if __name__ == '__main__':
-    #app.run(host='0.0.0.0')
-    app.run(host='0.0.0.0', debug=True, threaded=True)
+    app.run(host='0.0.0.0', threaded=True, debug=True)
 

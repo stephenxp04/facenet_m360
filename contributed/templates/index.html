@@ -1,5 +1,59 @@
 <html>
 <head>
+	<title>Facial Recognition Profile Enrolment</title>
+	<style>
+		body, html {
+    	margin:0;
+    	padding;
+    	height:100%
+		}
+
+		a {
+    	font-size:1.25em;
+		}
+		#fade {
+        display: none;
+        position:absolute;
+        top: 0%;
+        left: 0%;
+        width: 100%;
+        height: 100%;
+        background-color: #ababab;
+        z-index: 1001;
+        -moz-opacity: 0.8;
+        opacity: .70;
+        filter: alpha(opacity=80);
+    }
+    #modal {
+        display: none;
+        position: absolute;
+        top:0;
+        bottom:0;
+        left:0;
+        right:0;
+        width:80%;
+        height:80%;
+        border: 3px solid #ababab;
+        box-shadow:1px 1px 10px #ababab;
+        border-radius:10px;
+        background-color: white;
+        z-index: 1002;
+        text-align:center;
+        overflow: auto;
+        margin: auto;
+    }
+     #loader{
+     max-width: 100%;
+		max-height: 100%;
+		position: absolute;
+		margin:auto;
+		top:0;
+		bottom:0;
+		left:0;
+		right:0;
+     }
+    }
+	</style>
 	<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
 </head>
 <video autoplay ></video>
@@ -7,7 +61,12 @@
 <button id='stopcapture'>Stop Capture</button>
 <button id='snap'>Snap</button>
 <button id='upload'>Upload</button>
+<button id='recognition'>Start Recognition</button>
 <input name="username" type="text" id="username" class="searchField"/>
+<div id="fade"></div>
+<div id="modal">
+    <img id="loader" src="loading.gif" />
+</div>
 <canvas></canvas>
 
 <script>
@@ -45,6 +104,10 @@ document.querySelector('#upload').onclick = function() {
 	sendImage();
 };
 
+document.querySelector('#recognition').onclick = function() {
+	window.location.href = 'http://localhost:5000/recognition';
+};
+
 function handleSuccess(stream) {
 	video.srcObject = stream;
 }
@@ -72,7 +135,7 @@ function getvideoframe() {
 	//}
 
     //wait approximately 16ms and run again
-    setTimeout(getvideoframe,200);
+    setTimeout(getvideoframe,100);
     //requestAnimationFrame(getvideoframe);
 }
 
@@ -96,14 +159,20 @@ function sendImage() {
 		data: JSON.stringify(formdata),
 		contentType: false,
 		processData: false,
+		beforeSend: function(){
+			document.getElementById('modal').style.display = 'block';
+        	document.getElementById('fade').style.display = 'block';
+		},
+		error: function(){
+			document.getElementById('modal').style.display = 'none';
+        	document.getElementById('fade').style.display = 'none';
+			alert("Please enter name.");
+		},
 		success: function (msg) {
-			var obj = msg;
-			//console.log(obj.statusCode);
-			if (obj.statusCode == 200) {
-				alert("DONE");
-			} else {
-				alert(obj.msg);
-			}
+			document.getElementById('modal').style.display = 'none';
+        	document.getElementById('fade').style.display = 'none';
+        	//var obj = msg.getAllResponseHeaders();
+			alert(msg);
 		}
 	})
 
