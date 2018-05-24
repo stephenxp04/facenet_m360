@@ -36,20 +36,22 @@ def activate_job():
 	global extProc
 	global queue
 
-	while True:
-		if queue and extProc is not None:
-			if sp.Popen.poll(extProc) is not None:
-				queue.pop(0)
-				print('start new task : ' + str(queue[0].name))
-				extProc = sp.Popen('/home/stephenxp04/facenet_m360/retrain.sh', shell=True)
+	with open('/tmp/queue') as f:
+		while True:
+			if f:
+				queue = json.load(f)
+				if sp.Popen.poll(extProc) is not None:
+					queue.pop(0)
+					wr = open('/tmp/queue', 'w')
+					wr.dump(queue, wr)
+					print('start new task : ' + str(queue[0]))
+					extProc = sp.Popen('/home/stephenxp04/facenet_m360/retrain.sh', shell=True)
+				else:
+					print('still running old taks : ' + str(queue[0]))
 			else:
-				print('still running old taks : ' + str(queue[0].name))
-		else:
-			running = False
-			extProc = None
-			print('no task')	
+				print('no task')	
     			
-		time.sleep(3)
+			time.sleep(3)
     thread = threading.Thread(target=check_queue)
     thread.start()
 
@@ -86,8 +88,6 @@ def start():
 @app.route('/enrol', methods=['POST'])
 def enrol():
     global queue
-    global running
-    global extProc
     try:
         if request.method == 'POST':
             print('POST /enrol success!')
@@ -121,11 +121,8 @@ def enrol():
 	person = Object()
 	person.name = name
 	queue.append(person)
-
-	if running is False:
-		extProc = sp.Popen('/home/stephenxp04/facenet_m360/retrain.sh', shell=True)
-                running = True	
-	
+	wr = open('/tmp/queue', 'w')
+	json.dump(queue, wr)
         return redirect(url_for('getStatus', name=name, _external=True, _scheme='https'))
 
     except Exception as e:
@@ -140,15 +137,32 @@ def getStatus():
 	global extProc
 	global queue
 	
+	f = open('/tmp/queue')
 	req = str(request.args.get('name'))
-	
-	#if extProc is not None:	
-	#	if sp.Popen.poll(extProc) is None:
-	return json.dumps([ob.__dict__ for ob in queue])
-	
-	#else:
-	#	running = False
-		#return json.dumps('No enrolment job')
+	if running is False:
+		extProc = sp.Popen('/home/stephenxp04/facenet_m360/retrain.sh', shell=True)
+		running = True
+		return redirect(url_for('getStatus', name=req, _external=True, _scheme='https'))
+		
+	else:
+		#if queue[0] != req:
+		#	return Response('In queue: ' + str(queue.index(req)))
+		
+		#else:
+		if sp.Popen.poll(extProc) is None:
+			return json.dumps([ob.__dict__ for ob in json.load(f)])
+		else:
+			running = False
+			return 'No enrolment job'
+		
+		#if not queue:
+		#	extProc = None
+		#	running = False
+		#	return Response(req + ' enrolled complete.')
+		#else:
+		#	extProc = sp.Popen('/home/stephenxp04/facenet_m360/retrain.sh', shell=True)
+		#	running = True
+		#	return redirect(url_for('getStatus', name=queue[0], _external=True, _scheme='https'))
 
     except Exception as e:
         print('Enrolling failed : %s' % e)

@@ -2,25 +2,28 @@
 <head>
 	<style>
 		video {
-            position: absolute;
+		display:inline-block;
             top: 50px;
             left: 0;
             z-index: -1;
         }
-        canvas{
-            position: absolute;
-            top: 50px;
-            left: 0;
-            z-index:1;
-        }
 	</style>
 	<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
 </head>
-<video autoplay></video>
-<button id='startservice'>Start Recognition</button>
-<button id='stopservice'>Stop Recognition</button>
-<button id='sendimage'>Send Single Image</button>
+<div id="ui" style="display:inline-block; width:640px;">
+	<button id='startservice'>Start Recognition</button>
+	<button id='stopservice'>Stop Recognition</button>
+	<button id='sendimage'>Send Single Image</button>
+	<video autoplay></video>
+</div>
+<div id="faces" style="display:inline-block; vertical-align:top;">
+	<p>Detected faces: </p>
+	<div id="face"></div>
+</div>
 <script>
+//for starting events
+let isPlaying = false
+let gotMetadata = false
 
 const video = document.querySelector('video');
 const uploadWidth = 640;
@@ -29,7 +32,8 @@ let imageCanvas = document.createElement('canvas');
 let imageCtx = imageCanvas.getContext("2d");
 
 let drawCanvas = document.createElement('canvas');
-document.body.appendChild(drawCanvas);
+document.getElementById("ui").appendChild(drawCanvas);
+//document.body.appendChild(drawCanvas);
 let drawCtx = drawCanvas.getContext("2d");
 
 const constraints = {
@@ -62,7 +66,6 @@ document.querySelector('#sendimage').onclick = function() {
 
 function handleSuccess(stream) {
 	video.srcObject = stream;
-	getvideoframe();
 }
 
 function handleError(error) {
@@ -86,7 +89,7 @@ function getvideoframe() {
 	jpeg_string = imageCanvas.toDataURL('image/jpeg').replace("data:image/jpeg;base64,","");
 
     //wait approximately 16ms and run again
-    setTimeout(getvideoframe,100);
+    //setTimeout(getvideoframe,100);
     sendImage();
 }
 
@@ -97,7 +100,7 @@ function sendImage() {
 
 	$.ajax({
 		type: "POST",
-		url: "http://localhost:5000/recognition_result",
+		url: "https://ml.deekie.com/enrol/recognition_result",
 		data: JSON.stringify(formdata),
 		contentType: false,
 		processData: false,
@@ -106,10 +109,11 @@ function sendImage() {
 
 			//draw the boxes
 			drawBoxes(boxes);
-
+//dispatch an event
+            let event = new CustomEvent('facialRecognition', {detail: boxes});
+            document.dispatchEvent(event);
 			//Save and send the next image
-            imageCtx.drawImage(video, 0, 0, video.videoWidth, video.videoHeight,
-            	0, 0, uploadWidth, uploadWidth * (video.videoHeight / video.videoWidth));
+			getvideoframe();
 		}
 	})
 }
@@ -119,18 +123,44 @@ function drawBoxes(faces)
 	drawCtx.font = "bold 20px Verdana, sans-serif";
 	drawCtx.fillStyle = "#00ff44";
 	//clear the previous drawings
-    drawCtx.clearRect(0, 0, drawCanvas.width, drawCanvas.height);
+        drawCtx.clearRect(0, 0, drawCanvas.width, drawCanvas.height);
+	//document.getElementById("faces").innerHTML = "Detected faces: ";
+	var parent = document.getElementById("face");
+	while(parent.firstChild){
+		parent.removeChild(parent.firstChild);
+	}
 
-    faces.forEach(face => {
-		console.log(face.x,face.y,face.width,face.height,face.name);
+	faces.forEach(face => {
         let x = face.x;
         let y = face.y;
         let width = face.width - x;
         let height = face.height - y;
-
-        drawCtx.fillText(face.name + " - " + Math.round(face.score * 100) + "%", x + 5, y + 20);
-        drawCtx.strokeRect(x, y, width, height);
+	
+	var para = document.createElement("p")
+	var result = document.createTextNode(face.name + " - " + Math.round(face.score * 100) + "%");
+	para.appendChild(result)
+	var element = document.getElementById("face");
+	element.appendChild(para);
+	
+        //drawCtx.fillText(face.name + " - " + Math.round(face.score * 100) + "%", x + 5, y + 20);
+        //drawCtx.strokeRect(x, y, width, height);
     });
 }
+//check if metadata is ready - we need the video size
+video.onloadedmetadata = () => {
+    console.log("video metadata ready");
+    gotMetadata = true;
+//    if (isPlaying)
+//        getvideoframe();
+};
+
+//see if the video has started playing
+video.onplaying = () => {
+    console.log("video playing");
+    isPlaying = true;
+    if (gotMetadata) {
+        getvideoframe();
+    }
+};
 </script>
 </html>

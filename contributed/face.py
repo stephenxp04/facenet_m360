@@ -42,9 +42,9 @@ import facenet
 
 
 gpu_memory_fraction = 0.3
-data_dir = '/home/m360/MachineLearning/my_dataset/train_aligned/'
-facenet_model_checkpoint = '../model_checkpoints/face.pb'
-classifier_model = '../model_checkpoints/my_classifier_1.pkl'
+data_dir = '/home/stephenxp04/m360_face_images/my_dataset/train_aligned'
+facenet_model_checkpoint = '/home/stephenxp04/m360_face_images/model_checkpoints/20180402-114759/20180402-114759.pb'
+classifier_model = '/home/stephenxp04/m360_face_images/model_checkpoints/my_classifier_1.pkl'
 debug = False
 sess = None
 graph = None

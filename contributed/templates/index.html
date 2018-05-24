@@ -56,19 +56,34 @@
 	</style>
 	<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
 </head>
-<video autoplay ></video>
-<button id='startcapture'>Start Capture</button>
-<button id='stopcapture'>Stop Capture</button>
-<button id='snap'>Snap</button>
-<button id='upload'>Upload</button>
-<button id='recognition'>Start Recognition</button>
-<input name="username" type="text" id="username" class="searchField"/>
+<div style="display:inline-block; width:720px;">
+	<button id='startcapture'>Start Capture</button>
+	<button id='stopcapture'>Stop Capture</button>
+	<button id='snap'>Snap</button>
+	<button id='upload'>Upload</button>
+	<button id='recognition'>Start Recognition</button>
+	<button id='status'>Check Status</button>
+	<input name="username" type="text" id="username" class="searchField"/>
+</div>
+<div style="display:inline-block; width:720px;">
+	<div style="display:inline-block;">
+                <video autoplay></video>
+                <div style='text-align:center;'>My Cute Video</div>
+        </div>
+        <div style="display:inline-block;">
+                <canvas></canvas>
+                <div style='text-align:center;'>My Cute Face</div>
+        </div>
+</div>
+<div id="queue" style="display:inline-block; vertical-align:top;">
+	<p>Queues: </p>
+	<div id="table"></div>
+</div>
 <div id="fade"></div>
 <div id="modal">
     <img id="loader" src="loading.gif" />
 </div>
-<canvas></canvas>
-
+<meta charset="UTF-8"/>
 <script>
 
 const video = document.querySelector('video');
@@ -105,7 +120,58 @@ document.querySelector('#upload').onclick = function() {
 };
 
 document.querySelector('#recognition').onclick = function() {
-	window.location.href = 'http://localhost:5000/recognition';
+	window.location.href = 'https://ml.deekie.com/enrol/recognition';
+};
+
+document.querySelector('#status').onclick = function(){
+	checkStatus();
+};
+
+function checkStatus(){
+	count = 1;
+	
+	$.ajax({
+        type: "GET",
+        url: "https://ml.deekie.com/enrol/getStatus",
+        success: function(msg){
+		if (isEmpty(msg)){
+			let queues = JSON.parse(msg);
+			var parent = document.getElementById("table");
+			while(parent.firstChild){
+				parent.removeChild(parent.firstChild);
+			}
+
+		if(Object.keys(queues).length == 0){
+		var para = document.createElement("p")
+                var result = document.createTextNode("No enrollment task");
+                para.appendChild(result)
+                var element = document.getElementById("table");
+                element.appendChild(para);		
+}
+		queues.forEach(queue =>{
+                var para = document.createElement("p")
+        	if (count==1)
+			var result = document.createTextNode(count+" - " +queue.name+" being enrolled.");
+		else
+			var result = document.createTextNode(count+" - "+queue.name);
+        	para.appendChild(result)
+        	var element = document.getElementById("table");
+        	element.appendChild(para);
+			count+=1;
+			}
+		)
+			}
+		setTimeout(checkStatus, 2000);
+}
+        })
+};
+
+function isEmpty(obj) {
+    for(var key in obj) {
+        if(obj.hasOwnProperty(key))
+            return true;
+    }
+    return false;
 };
 
 function handleSuccess(stream) {
@@ -155,7 +221,7 @@ function sendImage() {
 
 	$.ajax({
 		type: "POST",
-		url: "http://localhost:5000/enrol",
+		url: "https://ml.deekie.com/enrol/enrol",
 		data: JSON.stringify(formdata),
 		contentType: false,
 		processData: false,
@@ -172,30 +238,13 @@ function sendImage() {
 			document.getElementById('modal').style.display = 'none';
         	document.getElementById('fade').style.display = 'none';
         	//var obj = msg.getAllResponseHeaders();
-			alert(msg);
+			//checkStatus();
 		}
 	})
-
-	/*
-    let xhr = new XMLHttpRequest();
-    xhr.open('POST', "http://localhost:5000/enrol", true);
-    xhr.onload = function () {
-        if (this.status === 200) {
-            let objects = JSON.parse(this.response);
-
-            //draw the boxes
-            //drawBoxes(objects);
-
-            //Save and send the next image
-            //imageCtx.drawImage(v, 0, 0, v.videoWidth, v.videoHeight, 0, 0, uploadWidth, uploadWidth * (v.videoHeight / v.videoWidth));
-            //imageCanvas.toBlob(postFile, 'image/jpeg');
-        }
-        else {
-            console.error(xhr);
-        }
-    };
-    xhr.send(formdata);
-	*/
 }
+
+window.onload = function (){
+	checkStatus();
+};
 </script>
 </html>
