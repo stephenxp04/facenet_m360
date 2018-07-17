@@ -35,6 +35,7 @@ import sys
 import math
 import pickle
 from sklearn.svm import SVC
+from tqdm import tqdm
 
 def main(args):
   
@@ -79,7 +80,7 @@ def main(args):
             nrof_images = len(paths)
             nrof_batches_per_epoch = int(math.ceil(1.0*nrof_images / args.batch_size))
             emb_array = np.zeros((nrof_images, embedding_size))
-            for i in range(nrof_batches_per_epoch):
+            for i in tqdm(range(nrof_batches_per_epoch)):
                 start_index = i*args.batch_size
                 end_index = min((i+1)*args.batch_size, nrof_images)
                 paths_batch = paths[start_index:end_index]
@@ -92,7 +93,7 @@ def main(args):
             if (args.mode=='TRAIN'):
                 # Train classifier
                 print('Training classifier')
-                model = SVC(kernel='linear', probability=True)
+                model = SVC(kernel='linear', probability=True, verbose=True)
                 model.fit(emb_array, labels)
             
                 # Create a list of class names
@@ -154,15 +155,15 @@ def parse_arguments(argv):
     parser.add_argument('--test_data_dir', type=str,
         help='Path to the test data directory containing aligned images used for testing.')
     parser.add_argument('--batch_size', type=int,
-        help='Number of images to process in a batch.', default=90)
+        help='Number of images to process in a batch.', default=500)
     parser.add_argument('--image_size', type=int,
         help='Image size (height, width) in pixels.', default=160)
     parser.add_argument('--seed', type=int,
         help='Random seed.', default=666)
     parser.add_argument('--min_nrof_images_per_class', type=int,
-        help='Only include classes with at least this number of images in the dataset', default=20)
+        help='Only include classes with at least this number of images in the dataset', default=100)
     parser.add_argument('--nrof_train_images_per_class', type=int,
-        help='Use this number of images from each class for training and the rest for testing', default=10)
+        help='Use this number of images from each class for training and the rest for testing', default=100)
     
     return parser.parse_args(argv)
 

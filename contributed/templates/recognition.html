@@ -72,6 +72,13 @@ function handleError(error) {
 	console.error('Reeeejected!', error);
 }
 
+function getUrlParameter(name) {
+    name = name.replace(/[\[]/, '\\[').replace(/[\]]/, '\\]');
+    var regex = new RegExp('[\\?&]' + name + '=([^&#]*)');
+    var results = regex.exec(location.search);
+    return results === null ? '' : decodeURIComponent(results[1].replace(/\+/g, ' '));
+};
+
 function getvideoframe() {
 	if(!isrecording) return;
 
@@ -100,7 +107,7 @@ function sendImage() {
 
 	$.ajax({
 		type: "POST",
-		url: "https://ml.deekie.com/enrol/recognition_result",
+		url: uploadURL + "/recognition_result",
 		data: JSON.stringify(formdata),
 		contentType: false,
 		processData: false,
@@ -159,6 +166,10 @@ video.onplaying = () => {
     console.log("video playing");
     isPlaying = true;
     if (gotMetadata) {
+		if (getUrlParameter('l') == 'local')
+      		 uploadURL = "http://localhost:8081";
+		else
+      		 uploadURL = "https://ml.deekie.com/enrol";
         getvideoframe();
     }
 };

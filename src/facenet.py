@@ -36,10 +36,14 @@ from sklearn.model_selection import KFold
 from scipy import interpolate
 from tensorflow.python.training import training
 import random
+import pickle
 import re
 from tensorflow.python.platform import gfile
 import math
 from six import iteritems
+classifier_model = '/work/MachineLearning/model_checkpoints/incremental_raw.pkl'
+classifier_filename_exp = os.path.expanduser(classifier_model)
+
 
 def triplet_loss(anchor, positive, negative, alpha):
     """Calculate the triplet loss according to the FaceNet paper
@@ -76,12 +80,12 @@ def center_loss(features, label, alfa, nrof_classes):
         loss = tf.reduce_mean(tf.square(features - centers_batch))
     return loss, centers
 
-def get_image_paths_and_labels(dataset):
+def get_image_paths_and_labels(dataset, append_index):
     image_paths_flat = []
     labels_flat = []
     for i in range(len(dataset)):
         image_paths_flat += dataset[i].image_paths
-        labels_flat += [i] * len(dataset[i].image_paths)
+        labels_flat += [i+append_index] * len(dataset[i].image_paths)
     return image_paths_flat, labels_flat
 
 def shuffle_examples(image_paths, labels):
@@ -315,6 +319,7 @@ class ImageClass():
         return len(self.image_paths)
   
 def get_dataset(path, has_class_directories=True):
+    append_index = 0
     dataset = []
     path_exp = os.path.expanduser(path)
     classes = [path for path in os.listdir(path_exp) \
@@ -327,7 +332,27 @@ def get_dataset(path, has_class_directories=True):
         image_paths = get_image_paths(facedir)
         dataset.append(ImageClass(class_name, image_paths))
   
-    return dataset
+    return dataset, append_index
+
+def append_dataset(path, has_class_directories=True):
+    with open(classifier_filename_exp, 'rb') as infile:
+        emb_temp, labels_temp, class_names_temp = pickle.load(infile)
+
+    append_index = len(class_names_temp)
+    dataset = []
+    path_exp = os.path.expanduser(path)
+    classes = [path for path in os.listdir(path_exp) \
+                    if os.path.isdir(os.path.join(path_exp, path))]
+    classes = [x for x in classes if x not in class_names_temp]
+    classes.sort()
+    nrof_classes = len(classes)
+    for i in range(nrof_classes):
+        class_name = classes[i]
+        facedir = os.path.join(path_exp, class_name)
+        image_paths = get_image_paths(facedir)
+        dataset.append(ImageClass(class_name, image_paths))
+  
+    return dataset, append_index
 
 def get_image_paths(facedir):
     image_paths = []

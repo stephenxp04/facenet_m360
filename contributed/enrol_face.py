@@ -20,7 +20,7 @@ class Enrol(object):
         frame_rate = 0
         frame_count = 0
         count = 0
-        save_path = str('/home/m360/MachineLearning/my_dataset/train_aligned/' + args.name)
+        save_path = str('/work/MachineLearning/my_dataset/train_aligned/' + args.name)
 
         if not os.path.exists(save_path):
             os.mkdir(save_path)
@@ -73,7 +73,7 @@ class Enrol(object):
     def parse_arguments(argv):
         parser = argparse.ArgumentParser()
 
-        parser.add_argument('--name', type=str,
+        parser.add_argument('--name', type=str, required=True,
                             help='Name of input person')
         return parser.parse_args(argv)
 

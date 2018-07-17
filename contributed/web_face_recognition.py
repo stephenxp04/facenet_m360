@@ -33,7 +33,9 @@ import face
 import json
 
 face_recognition = face.Recognition()
-pic = '/home/m360/MachineLearning/my_dataset/train_aligned/Stephen/Stephen90.jpg'
+queue = []
+running = False
+
 # added to put object in JSON
 class Object(object):
     def __init__(self):
@@ -52,7 +54,7 @@ def add_overlays(faces):
 
             if f.name is not None:
                 if f.confidence <= 0.70:
-                    f.name = 'Unknown'
+                    f.name = ''
 
             person = Object()
             person.name = f.name
@@ -61,8 +63,6 @@ def add_overlays(faces):
             person.y = float(face_bb[1])
             person.width = float(face_bb[2])
             person.height = float(face_bb[3])
-
-            print(str(person.name) + ' : ' + str(person.score))
             output.append(person)
 
         outputJson = json.dumps([ob.__dict__ for ob in output])
@@ -82,45 +82,39 @@ def detect(image):
     return faces
 
 def recognize(image):
-    #frame_interval = 2  # Number of frames after which to run face detection
-    #fps_display_interval = 3  # seconds
-    #frame_rate = 0
-    #frame_count = 0
-
-    #video_capture = cv2.VideoCapture(0)
-    #start_time = time.time()
-
-    #while True:
-    # Capture frame-by-frame
-    #ret, frame = video_capture.read()
-
-    #if (frame_count % frame_interval) == 0:
     faces = face_recognition.identify(image)
 
     return add_overlays(faces)
 
-def enrol():
-    return face_recognition.encoder.retrain_model()
-#     cv2.imshow('Video', frame)
-#     if cv2.waitKey(1) & 0xFF == ord('q'):
-#         break
-#
-# # When everything is done, release the capture
-# video_capture.release()
-# cv2.destroyAllWindows()
+def enrol(name, incremental):
+    global queue
+    global running
 
+    if name is not None:
+        queue.append(name)
 
-# def parse_arguments(argv):
-#     parser = argparse.ArgumentParser()
-#
-#     parser.add_argument('--debug', action='store_true',
-#                         help='Enable some debug outputs.')
-#     return parser.parse_args(argv)
-#
-#
-# if __name__ == '__main__':
-# #    main(parse_arguments(sys.argv[1:]))
-#      recognize(pic)
+    if queue and run() is False:
+        running = True
+        #print("begin retraining" + queue[0])
+        face_recognition.encoder.retrain_model(incremental)
+        queue.pop(0)
+        running = False
+
+    return enrol(None, incremental=True)
+
+def run():
+    global running
+    return running
+
+def get_status():
+    global queue
+    output = []
+    for i in queue:
+        job = Object()
+        job.job = i
+        output.append(job)
+    
+    return json.dumps([ob.__dict__ for ob in output])
 
 def debug():
     faces = face_recognition.identify(cv2.imread(pic, cv2.IMREAD_COLOR))

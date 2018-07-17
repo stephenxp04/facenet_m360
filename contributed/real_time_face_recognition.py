@@ -29,11 +29,16 @@ import sys
 import time
 import urllib2
 import cv2
-
+import threading
+from threading import Thread
 import face
+
+face_recognition = None
+face_det = None
 
 
 def add_overlays(frame, faces, frame_rate):
+    global face_det
     if faces is not None:
         for face in faces:
             face_bb = face.bounding_box.astype(int)
@@ -41,8 +46,8 @@ def add_overlays(frame, faces, frame_rate):
                           (face_bb[0], face_bb[1]), (face_bb[2], face_bb[3]),
                           (0, 0, 0), 1)
             if face.name is not None:
-                if face.confidence <= 0.70:
-                    face.name = 'Unknown'
+                if face.confidence <= 0.85:
+                    face.name = ' '
 
                 cv2.putText(frame, face.name, (face_bb[0], face_bb[3]),
                             cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 255, 0),
@@ -56,6 +61,8 @@ def add_overlays(frame, faces, frame_rate):
 
 
 def main(args):
+    global face_recognition
+    global face_det
     frame_interval = 2  # Number of frames after which to run face detection
     fps_display_interval = 3  # seconds
     frame_rate = 0
@@ -64,16 +71,20 @@ def main(args):
     video_capture = cv2.VideoCapture(0)
     face_recognition = face.Recognition()
     start_time = time.time()
-
+    video_capture.set(28, 0)
     #if args.debug:
-
 
     while True:
         # Capture frame-by-frame
         ret, frame = video_capture.read()
+        #img = cv2.imread(frame)
 
         if (frame_count % frame_interval) == 0:
-            faces = face_recognition.identify(frame)
+            Thread(target=face_reg_wrapper, 
+                args=(frame, )
+            ).start()
+            #print(face_det)
+            #faces = face_recognition.identify(frame)
 
             # Check our current fps
             end_time = time.time()
@@ -82,17 +93,35 @@ def main(args):
                 start_time = time.time()
                 frame_count = 0
 
-        add_overlays(frame, faces, frame_rate)
+        add_overlays(frame, face_det, frame_rate)
 
         frame_count += 1
         cv2.imshow('Video', frame)
-        if cv2.waitKey(1) & 0xFF == ord('q'):
+        k = cv2.waitKey(1)
+        if k == ord('q'):
             break
+        elif k == ord('r'):
+            Thread(target=retrain_wrapper, verbose=True).start()
+            continue
 
     # When everything is done, release the capture
     video_capture.release()
     cv2.destroyAllWindows()
 
+def face_reg_wrapper(frame):
+    global face_recognition
+    global face_det
+    #print(frame)
+    #print("recognizing faces")
+    #cv2.imshow("test", frame)
+    face_det = face_recognition.identify(frame)
+    #print(faces)
+    #return face_recognition.identify(frame)
+
+def retrain_wrapper():
+    global face_recognition
+
+    face_recognition.encoder.retrain_model(incremental=True)
 
 def parse_arguments(argv):
     parser = argparse.ArgumentParser()

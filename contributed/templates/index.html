@@ -4,7 +4,6 @@
 	<style>
 		body, html {
     	margin:0;
-    	padding;
     	height:100%
 		}
 
@@ -120,11 +119,18 @@ document.querySelector('#upload').onclick = function() {
 };
 
 document.querySelector('#recognition').onclick = function() {
-	window.location.href = 'https://ml.deekie.com/enrol/recognition';
+	window.location.href = uploadURL + 'recognition';
 };
 
 document.querySelector('#status').onclick = function(){
 	checkStatus();
+};
+
+function getUrlParameter(name) {
+    name = name.replace(/[\[]/, '\\[').replace(/[\]]/, '\\]');
+    var regex = new RegExp('[\\?&]' + name + '=([^&#]*)');
+    var results = regex.exec(location.search);
+    return results === null ? '' : decodeURIComponent(results[1].replace(/\+/g, ' '));
 };
 
 function checkStatus(){
@@ -132,7 +138,7 @@ function checkStatus(){
 	
 	$.ajax({
         type: "GET",
-        url: "https://ml.deekie.com/enrol/getStatus",
+        url: uploadURL + "/getStatus",
         success: function(msg){
 		if (isEmpty(msg)){
 			let queues = JSON.parse(msg);
@@ -221,7 +227,7 @@ function sendImage() {
 
 	$.ajax({
 		type: "POST",
-		url: "https://ml.deekie.com/enrol/enrol",
+		url: uploadURL + "/enrol",
 		data: JSON.stringify(formdata),
 		contentType: false,
 		processData: false,
@@ -245,6 +251,10 @@ function sendImage() {
 
 window.onload = function (){
 	checkStatus();
+	if (getUrlParameter('l') == 'local')
+      		 uploadURL = "http://localhost:8081";
+	else
+      		 uploadURL = "https://ml.deekie.com/enrol";
 };
 </script>
 </html>

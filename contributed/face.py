@@ -36,18 +36,36 @@ import cv2
 import numpy as np
 import tensorflow as tf
 from scipy import misc
+from sklearn.grid_search import GridSearchCV
 from sklearn.svm import SVC
+from sklearn.model_selection import ParameterGrid
+from sklearn.linear_model import SGDClassifier
+from sklearn.metrics import roc_auc_score
+import parfit.parfit as pf
+from sklearn.neighbors import KNeighborsClassifier
+from multiprocess import Pool, cpu_count
 import align.detect_face
 import facenet
+from tqdm import tqdm
+from timeit import timeit
+from sklearn.model_selection import train_test_split
+from sklearn.preprocessing import MinMaxScaler
+import time
+from joblib import Parallel, delayed
 
+gpu_memory_fraction = 0.5
+data_dir = '/work/MachineLearning/my_dataset/train_aligned'
+facenet_model_checkpoint = '/work/MachineLearning/model_checkpoints/20180402-114759/20180402-114759.pb'
+#classifier_model = '/work/MachineLearning/model_checkpoints/incremental_test.pkl'
+classifier_model = '/work/MachineLearning/model_checkpoints/incremental_raw.pkl'
 
-gpu_memory_fraction = 0.3
-data_dir = '/home/stephenxp04/m360_face_images/my_dataset/train_aligned'
-facenet_model_checkpoint = '/home/stephenxp04/m360_face_images/model_checkpoints/20180402-114759/20180402-114759.pb'
-classifier_model = '/home/stephenxp04/m360_face_images/model_checkpoints/my_classifier_1.pkl'
 debug = False
 sess = None
 graph = None
+model = SVC(kernel='linear', probability=True)
+labels = None
+class_names = None
+emb_array = None
 
 class Face(object):
     def __init__(self):
@@ -63,8 +81,6 @@ class Recognition(object):
         self.detect = Detection()
         self.encoder = Encoder()
         self.identifier = Identifier()
-
-
 
     def add_identity(self, image, person_name):
         faces = self.detect.find_faces(image)
@@ -83,33 +99,59 @@ class Recognition(object):
                 cv2.imshow("Face: " + str(i), face.image)
             face.embedding = self.encoder.generate_embedding(face)
             face.name = self.identifier.identify(face)
+            #face.confidence = 1.0
             face.confidence = self.identifier.confidence_level(face)
-            #print(face.confidence)
-            #face.name = self.identifier.identify(face)
         return faces
 
 
 class Identifier(object):
     def __init__(self):
         with open(classifier_model, 'rb') as infile:
-            self.model, self.class_names = pickle.load(infile)
+            self.emb_array, self.labels, self.class_names = pickle.load(infile)
+        self.build_model()
+
+    def build_model(self):
+        global labels
+        global emb_array
+        global class_names
+
+        emb_array = self.emb_array
+        labels = self.labels
+        class_names = self.class_names
+        #emb_array = np.concatenate((emb_array, self.emb_array))
+        #labels = np.concatenate((labels , self.labels.tolist())).tolist()     #add new labels to old labels
+        #class_names = np.concatenate((class_names , self.class_names))                          #append new class name to old class names
+
+        X_train, X_test, y_train, y_test = train_test_split(emb_array, labels, test_size=0.2)
+        #self.model = SGDClassifier(loss='log', verbose=True, n_jobs=-1, n_iter=1000, alpha=1e-5, 
+        #    tol=None, shuffle=True, random_state=100, penalty='l2')
+       #self.model = KNeighborsClassifier(n_neighbors=1, algorithm='auto')
+        print('Start building model')
+        start = time.time()
+        #param_grid = {'C': [1e3, 5e3, 1e4, 5e4, 1e5],
+        #      'gamma': [0.0001, 0.0005, 0.001, 0.005, 0.01, 0.1], }
+        #self.model = GridSearchCV(SVC(kernel='rbf', cache_size=2048, probability=True), param_grid, n_jobs=-1)
+        model.fit(X_train, y_train)
+        #self.model.fit(X_train, y_train)
+        end = time.time()
+        print ("Fit Time: {0:4f}s".format(end - start))
+        print('Build model done')
 
     def identify(self, face):
-        #result = []
+        global model
+        global class_names
         if face.embedding is not None:
-            predictions = self.model.predict_proba([face.embedding])
+            predictions = model.predict_proba([face.embedding])
             best_class_indices = np.argmax(predictions, axis=1)
             best_class_probabilities = predictions[np.arange(len(best_class_indices)), best_class_indices]
-            #result.append((self.class_names[best_class_indices[0]], best_class_probabilities[0]))
-            return self.class_names[best_class_indices[0]]
-            #return result
-
+            return class_names[best_class_indices[0]]
+   
     def confidence_level(self, face):
+        global model
         if face.embedding is not None:
-            predictions = self.model.predict_proba([face.embedding])
+            predictions = model.predict_proba([face.embedding])
             best_class_indices = np.argmax(predictions, axis=1)
             best_class_probabilities = predictions[np.arange(len(best_class_indices)), best_class_indices]
-            #result.append((self.class_names[best_class_indices[0]], best_class_probabilities[0]))
             return best_class_probabilities[0]
 
 class Encoder(object):
@@ -120,9 +162,6 @@ class Encoder(object):
             with self.sess.as_default():
                 facenet.load_model(facenet_model_checkpoint)
                 print("Loaded model")
-                with open('/tmp/log1', 'w') as f:
-                    for node in self.graph.as_graph_def().node:
-                        f.write(str(node.name + '\n'))
 
     def generate_embedding(self, face):
         # Get input and output tensors
@@ -136,55 +175,88 @@ class Encoder(object):
         feed_dict = {images_placeholder: [prewhiten_face], phase_train_placeholder: False}
         return self.sess.run(embeddings, feed_dict=feed_dict)[0]
 
-    def retrain_model(self):
-        dataset = facenet.get_dataset(data_dir)
+    def incremental_training(self, emb_array_new, labels_new, class_names_new):
+        global labels
+        global emb_array
+        global class_names
+        emb_array = np.concatenate((emb_array, emb_array_new))
+        labels = np.concatenate((labels ,labels_new))     #add new labels to old labels
+        class_names = np.concatenate((class_names ,class_names_new))                          #append new class name to old class names
+
+    def retrain_model(self, incremental):
+        global labels
+        global emb_array
+        global class_names
+        if incremental is True:
+            dataset, append_index = facenet.append_dataset(data_dir)
+            paths, self.append_labels = facenet.get_image_paths_and_labels(dataset, append_index)
+            self.append_class_names = [cls.name.replace('_', ' ') for cls in dataset]
+
+        else:
+            dataset, append_index = facenet.get_dataset(data_dir)
+            paths, labels = facenet.get_image_paths_and_labels(dataset, append_index)
+            class_names = [cls.name.replace('_', ' ') for cls in dataset]
 
         np.random.seed(seed=666)
         # Check that there are at least one training image per class
         for cls in dataset:
             assert (len(cls.image_paths) > 0, 'There must be at least one image for each class in the dataset')
-
-        paths, labels = facenet.get_image_paths_and_labels(dataset)
+        
+        # Create a list of class names
 
         print('Number of classes: %d' % len(dataset))
         print('Number of images: %d' % len(paths))
-        with open('/tmp/log', 'w') as f:
-            for node in self.graph.as_graph_def().node:
-                f.write(str(node.name + '\n'))
+        if incremental is True:
+            print("new people added: ")
+            print(self.append_class_names)
+ 
         # Get input and output tensors
         images_placeholder = self.graph.get_tensor_by_name("input:0")
         embeddings = self.graph.get_tensor_by_name("embeddings:0")
         phase_train_placeholder = self.graph.get_tensor_by_name("phase_train:0")
         embedding_size = embeddings.get_shape()[1]
-
+        
         # Run forward pass to calculate embeddings
         print('Calculating features for images')
         nrof_images = len(paths)
         nrof_batches_per_epoch = int(math.ceil(1.0 * nrof_images / 90))
-        emb_array = np.zeros((nrof_images, embedding_size))
-        for i in range(nrof_batches_per_epoch):
+        self.append_emb_array = np.zeros((nrof_images, embedding_size))
+
+        for i in tqdm(range(nrof_batches_per_epoch)):
             start_index = i * 90
             end_index = min((i + 1) * 90, nrof_images)
             paths_batch = paths[start_index:end_index]
             images = facenet.load_data(paths_batch, False, False, 160)
             feed_dict = {images_placeholder: images, phase_train_placeholder: False}
-            emb_array[start_index:end_index, :] = self.sess.run(embeddings, feed_dict=feed_dict)
+            self.append_emb_array[start_index:end_index, :] = self.sess.run(embeddings, feed_dict=feed_dict)
 
         classifier_filename_exp = os.path.expanduser(classifier_model)
-
-        # if (args.mode=='TRAIN'):
-        # Train classifier
         print('Training classifier')
-        model = SVC(kernel='linear', probability=True)
-        model.fit(emb_array, labels)
-
-        # Create a list of class names
-        class_names = [cls.name.replace('_', ' ') for cls in dataset]
-
-        # Saving classifier model
-        with open(classifier_filename_exp, 'wb') as outfile:
-            pickle.dump((model, class_names), outfile)
-        print('Saved classifier model to file "%s"' % classifier_filename_exp)
+     
+        if incremental is True:
+            self.incremental_training(self.append_emb_array, self.append_labels, self.append_class_names)
+  
+        X_train, X_test, y_train, y_test = train_test_split(emb_array, labels, test_size=0.25)
+        #self.model = SGDClassifier(loss='log', verbose=True, n_jobs=-1, n_iter=1000, alpha=1e-5, 
+        #    tol=None, shuffle=True, random_state=100, penalty='l2')
+        #self.model = SVC(kernel='rbf', probability=True, verbose=True, cache_size=1024)
+        #self.model = KNeighborsClassifier(n_neighbors=1, algorithm='auto')
+        print('Start building model')
+        start = time.time()
+        #param_grid = {'C': [1e3, 5e3, 1e4, 5e4, 1e5],
+        #      'gamma': [0.0001, 0.0005, 0.001, 0.005, 0.01, 0.1], }
+        #self.model = GridSearchCV(SVC(kernel='rbf', cache_size=2048, probability=True), param_grid, n_jobs=-1)
+        model.fit(X_train, y_train)
+        #self.model.fit(X_train, y_train)
+        end = time.time()
+        print ("Fit Time: {0:4f}s".format(end - start))
+        print('Build model done')
+       
+        if incremental is False:
+            # Saving classifier model
+            with open(classifier_filename_exp, 'wb') as outfile:
+                pickle.dump((emb_array, labels, class_names), outfile)
+            print('Saved classifier model to file "%s"' % classifier_filename_exp)
 
         return 'Success'
 
