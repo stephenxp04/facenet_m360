@@ -1,0 +1,562 @@
+* {
+    font-family: 'Prompt';
+    color:#fff;
+}
+body{
+    background-color: RGBa(0,0,0,1);
+    margin: 0px;
+    overflow: hidden;
+}
+.maincontainer{
+    width: 1200px;
+    height: 675px;
+    margin: 0px auto;
+    position: absolute;
+    margin-top: calc((100vh - 675px)/ 2);
+    left: 0;
+    right: 0;
+    bottom: 0;
+    top: 0;
+    z-index: 99;
+    background-color: RGBa(0,0,0,.8);
+    border: 1px solid #161616;
+}
+.clear{
+    clear: both;
+}
+.maintop{
+    /*background-color: RGBa(0,0,0,.8);
+    width: 20.85%;*/
+    margin-top: 10px;
+}
+.logo{
+    /*padding-top:30px;
+    background-image: url(resources/facerecognation.png);
+    background-repeat: no-repeat;
+    background-size: 40px;
+    background-position: left;
+    text-indent: 55px;
+    height: 40px;
+    line-height: 40px;
+    font-size: 19px;
+    float: left;
+    margin-left: 10px;  */
+    background-image: url(resources/facerecognation.png);
+    background-repeat: no-repeat;
+    background-size: 40px;
+    background-position: left 0px center;
+    text-indent: 55px;
+    height: 40px;
+    line-height: 40px;
+    font-size: 19px;
+    margin-left: 10px;
+} 
+
+.powerby{
+    /*position: absolute;
+    top: 20px;
+    right: 20px;
+    z-index: 2;*/
+    position: absolute;
+    top: 10px;
+    right: 20px;
+    z-index: 2;
+    text-align: right;
+    font-size: 14px;
+}
+
+.leftqueqectn{
+    background-color: #161616;
+    height: calc(675px - 50px);
+    width: 250px;
+    float: left;
+}
+
+.leftqueqectnttctn{
+    background-color: #000;
+    padding:10px 15px;
+}
+
+.lds-dual-ring {
+    display: inline-block;
+    vertical-align: middle;
+    width: 20px;
+    height: 20px;
+    margin-right: 15px;
+  }
+  .lds-dual-ring:after {
+    content: " ";
+    display: block;
+    width: 15px;
+    height: 15px;
+    margin: 1px;
+    border-radius: 50%;
+    border: 2px solid #fff;
+    border-color: #fff transparent #fff transparent;
+    animation: lds-dual-ring 1.2s linear infinite;
+  }
+  @keyframes lds-dual-ring {
+    0% {
+      transform: rotate(0deg);
+    }
+    100% {
+      transform: rotate(360deg);
+    }
+  }
+  
+.leftqueqectntt{
+    display: inline-block;
+    vertical-align: middle;
+    line-height: 20px;
+    font-size: 13px;
+}
+
+.currentuser{
+    margin:10px 15px 0px;
+    border: 1px solid #3184FC;
+    cursor: pointer;
+}
+
+.currentusertxt{
+    font-size: 13px;
+    width: calc(250px - 40px - 29px - 20px);
+    float: left;
+    line-height: 35px;
+    padding:0px 10px;
+}
+
+.currentusericon{
+    background-image: url(resources/learning.png);
+    background-repeat: no-repeat;
+    background-size: 20px;
+    background-position:center;
+    float: left;
+    background-color: #3184FC;
+    height: 35px;
+    width: 35px;
+    border: 1px solid #3184FC;
+}
+
+.leftqueqelistitem{
+    margin:10px 15px 0px;
+    border: 1px solid transparent;
+    cursor: pointer;
+    transition: 0.3s all ease;
+}
+
+.leftqueqelistitem:hover{
+    border: 1px solid #83b5fd;
+}
+
+.leftqueqelistitemtxt{
+    font-size: 13px;
+    width: calc(250px - 40px - 29px - 20px);
+    float: left;
+    line-height: 35px;
+    padding:0px 10px;
+}
+
+.leftqueqelistitemicon{
+    float: left;
+    background-color: transparent;
+    height: 35px;
+    width: 35px;
+    border: 1px solid transparent;
+}
+
+.blurbigcircle{
+    float: right;
+    position: relative;
+    background-image: url(resources/bgcircle.png);
+    background-repeat: no-repeat;
+    background-size: 100%;
+    background-position: right;
+    height: calc(675px - 50px);
+    width: 880px;
+}
+
+.blurbigcircleinner{
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    top: 250px;
+    margin: 0 auto;
+    width: 400px;
+    height: 250px;
+}
+
+.blurbigcircletop img{
+    display: inline-block;
+    vertical-align: middle;
+    width: 80px;
+}
+
+.blurbigcirclettctn{
+    display: inline-block;
+    vertical-align: middle;
+    margin-left: 20px;
+    /* margin-bottom: 40px; */
+}
+
+.blurbigcircletop{
+    margin-bottom:70px;
+}
+
+.blurbigcirclett{
+    font-size: 30px;
+}
+
+.blurbigcirclett2{
+     font-size: 19px;
+    color: #ccc;
+}
+
+.blurbigcirclebtmtt{
+    color:#86BCFF;
+    margin-bottom: 10px;
+}
+
+.blurbigcirclebtmfield{
+
+}
+
+.blurbigcirclebtmfield input{
+    width: calc(100% - 50px - 40px);
+    height: 50px;
+    float: left;
+    border: 0;
+    outline: 0;
+    padding: 0px 20px;
+    color: #333;
+}
+
+.blurbigcirclebtmbtn{
+    background-image: url(resources/nextstep.png);
+    background-repeat: no-repeat;
+    background-size: 20px;
+    background-position:center;
+    float: left;
+    background-color: #146AD9;
+    height: 50px;
+    width: 50px;
+    cursor: pointer;
+    transition: 0.3s all ease;
+}
+
+.blurbigcirclebtmbtn:hover{
+    background-color: #1054ad;
+}
+
+.centerfacecircle{
+    position: Relative;
+    text-align: Center;
+    cursor: Default;
+    transform: rotate(180deg);
+    margin: -1px auto 50px;
+    margin-left: 275px;
+}
+
+.centerfacecircle img{
+    transform: rotate(-180deg);
+    position: absolute;
+    display: block;
+    margin: 0 auto;
+    width: 150px;
+    height: 150px;
+}
+
+.centerfacecircle img.center{
+    left: 0;
+    right: 0;
+    top: calc((400px - 150px) /2);
+    bottom: 0;
+}
+
+.centerfacecircle img.upperleft{
+    bottom: 0;
+    left: -80px;
+    width: 80px;
+    height: 80px;
+}
+
+.centerfacecircle img.upperright{
+    right: -80px;
+    bottom: 0;
+    width: 80px;
+    height: 80px;
+}
+
+.centerfacecircle img.bottomleft{
+    left: -80px;
+    top: 0;
+    width: 80px;
+    height: 80px;
+}
+
+.centerfacecircle img.bottomright{
+    right: -80px;
+    top: 0;
+    width: 80px;
+    height: 80px;
+}
+
+.centerfacecircle SPAN,
+.centerfacecircle B{
+    margin:          0 23%;
+    width:           5%;
+    position:        Absolute;
+    text-align:      Center;
+    display:         Inline-Block;
+    color:           RGBa(0,0,0,.8);
+    font-weight:     100;
+    font-family:     "Open Sans", Arial;
+    overflow:        Hidden;
+    white-space:     NoWrap;
+    text-overflow:   Ellipsis;
+}
+.centerfacecircle[data-style="Semi"] B{
+    margin:          0 10%;
+    width:           80%;
+}
+
+.centerfacecircle S,
+.centerfacecircle U{
+    text-decoration: None;
+    font-size:       .5em;
+    opacity:         .5;
+}
+
+.centerfacecircle B{
+    color:           Black;
+    font-weight:     300;
+    font-size:       .5em;
+    opacity:         .8;
+}
+
+.centerfacecirclectn{
+    position: absolute;
+    width: 950px;
+    height: 675px;
+    top: 0px;
+    right: 0;
+    overflow: hidden;
+}
+
+.centerfacecirclectn.startcapture{
+    background-image: url(resources/maskbg.png);
+    background-repeat: no-repeat;
+    background-size: 100%;
+    background-position:center;
+}
+
+.centerfacecirclett{
+    background-color: transparent;
+    text-align: center;
+    margin-top: 70px;
+}
+
+.centerfacecirclebtmtt{
+    text-align: center;
+    margin-bottom: 10px;
+}
+
+.centerfacecirclebtn{
+    background-color: #3184FC;
+    text-align: center;
+    padding: 10px;
+    width: 170px;
+    margin: 0 auto;
+    cursor: pointer;
+    transition: 0.3s all ease;
+    font-size: 13px;
+}
+
+.centerfacecirclebtn:hover{
+    background-color: #2769c9;
+}
+
+.webcam{
+    position: absolute;
+    top: -28px;
+    left: -25px;
+    overflow: hidden;
+    transform: rotateY(180deg);
+    -webkit-transform:rotateY(180deg); /* Safari and Chrome */
+    -moz-transform:rotateY(180deg); /* Firefox */
+}
+
+.videocontainer{
+    width: 1200px;
+    height: 675px;
+    overflow: hidden;
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    top: calc((100vh - 675px)/ 2);
+    margin: 0 auto;
+}
+
+.finalcenter{
+    float: right;
+    position: relative;
+    height: calc(675px - 70px - 80px);
+    width: 870px;
+    background-color:RGBa(0,0,0,.8);
+    padding: 40px;
+}
+
+.captureimglist{
+    /*width: 90%;
+    height: 90%;
+    display: inline-block;
+    overflow-y: scroll;
+    overflow-x: hidden;*/
+    width: 870px;
+    height: 450px;
+    display: block;
+    overflow-y: scroll;
+    overflow-x: hidden;
+    margin: 0 auto;
+}
+
+.captureimglist::-webkit-scrollbar {
+    width: 3px;
+    border-radius:50px;
+}
+ 
+.captureimglist::-webkit-scrollbar-track {
+    -webkit-box-shadow: inset 0 0 6px rgba(0,0,0,0.3);
+    border-radius:50px;
+}
+ 
+.captureimglist::-webkit-scrollbar-thumb {
+  background-color: rgba(255,255,255,0.8);
+  outline: 1px solid slategrey;
+  border-radius:50px;
+}
+
+.captureimgitem{
+    width: 160px;
+    height: 160px;
+    margin-right:10px;
+    opacity: 0;
+    transition: 0.3s all ease;
+    cursor: pointer;
+}
+
+.display{
+    opacity: 1;
+}
+
+.finalask{
+    margin-top: 30px;
+    float: right;
+    display: none;
+    overflow: hidden;
+}
+
+.finalasktt{
+    font-size: 13px;
+    margin-bottom: 5px;
+    text-align: right;
+}
+
+.finalaskbtnline{
+    /*display: inline-block;
+    vertical-align: middle;*/
+    float: right;
+    border: 2px solid #ffffff;
+    background-color: transparent;
+    text-align: center;
+    color: #fff;
+
+    transition: 0.3s all ease;
+    cursor: pointer;
+    min-width: 125px;
+    margin-right: 15px; 
+    font-size: 13px;
+}
+
+.finalaskbtnline button{
+    padding: 10px 30px;
+}
+
+.finalaskbtnline:hover button{
+    background-color: #fff;
+    color: #000;
+}
+
+.finalaskbtnfull{
+    /*display: inline-block;
+    vertical-align: middle;*/
+    float: right;
+    border: 2px solid #3184FC;
+    background-color: #3184FC;
+    text-align: center;
+    color: #fff;
+    padding: 10px 30px;
+    transition: 0.3s all ease;
+    cursor: pointer;
+    min-width: 125px;
+    font-size: 13px;
+}
+
+.finalaskbtnfull:hover{
+    border: 2px solid #2769c9;
+    background-color: #2769c9;
+    color: #fff;
+}
+
+button{
+    width: 100%;
+    height: 100%;
+    background-color: transparent;
+    border-color: transparent;
+    border:0;
+    outline: none;
+    cursor: pointer;
+}
+
+#enrol{
+    width: 100%;
+    height: 100%;
+    background-color: transparent;
+    border-color: transparent;
+}
+
+.fade-out{
+    visibility: hidden;
+    opacity: 0;
+    transition: visibility 0s all ease 0ms, opacity 0ms;
+}
+
+.fade-in {
+    visibility: visible;
+    opacity: 1;
+    transition: visibility 0s linear 0s, opacity 0ms;
+  }
+
+.hide{
+    display: none;
+}
+
+.threebg{
+    position: absolute;
+    top:0;
+}
+
+.hovercanvas{
+    position: absolute;
+    height: 40px;
+    width: 40px;
+    cursor: pointer;
+    display: none;
+}
+
+.hovercanvas img{
+    display: block;
+    margin: 8px auto;
+    width: 20px;
+}

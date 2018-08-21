@@ -1,0 +1,441 @@
+<html>
+<head>
+	<style>
+		body{
+			margin: 0;
+		}
+		video {
+			display: none;
+            top: 0;
+            left: 0;
+            z-index: -1;
+        }
+        #ui{
+        	display: inline-block;
+        	width: 100%;
+        	height: 100%;
+        	position: relative;
+        }
+        canvas{
+			position: relative;
+			z-index: -1;
+			width:100%;
+			height:100%;
+			transform: rotateY(180deg);
+			-webkit-transform:rotateY(180deg); /* Safari and Chrome */
+			-moz-transform:rotateY(180deg); /* Firefox */
+        }
+        img{
+        	margin-top: 3%;
+        	margin-bottom: auto;
+        	margin-left: 7%;
+        	margin-right: auto;
+        	display: block;
+        	max-width:80%;
+        	max-height:80%;
+        }
+		.fromleft{
+			position:absolute;
+			background-color:#123;
+			width:40%;
+			height:20%;
+			bottom:15%;
+			left:-400px;
+			transition:1.5s all ease;
+			opacity: 0;
+		}
+		.fromright{
+			position:absolute;
+			background-color:#123;
+			text-align: center;
+			width:60%;
+			height:20%;
+			bottom:10%;
+			right:-400px;
+			transition: 1.5s all ease;
+			opacity: 0;
+		}
+		.fromright2{
+			position:absolute;
+			background-color:royalblue;
+			width:3%;
+			height:16%;
+			bottom:12%;
+			right:-500px;
+			transition: 1.5s all ease;
+			opacity: 0;
+		}
+		.wrapper { position: absolute; 
+			bottom: 0;
+			height:75%;
+			width:40%; 
+			overflow:hidden; 
+		}
+		.people { position:absolute; 
+			bottom:0; 
+			width:100%; 
+		}
+		.detect_box{
+			display: none;
+			font-family: Verdana, Geneva, Tahoma, sans-serif;
+			font-size: 24px;
+			text-align: center;
+			color: RGB(200, 255, 255);
+			position: relative;
+			background-color: RGBa(0,0,0, 0.7);
+			height: 12%;
+			width: 100%;
+			margin-top: 10px;
+			/*opacity: 0;
+			transition: 1.0s all ease;*/
+		}
+		.border{
+			position: absolute;
+			background-color: turquoise;
+			height:100%;
+			width:5%;
+			left:0px;
+		}
+		.tocenter{
+			left:50px;
+    		opacity : 1;
+		}
+		.tocenter2{
+			right:50px;
+    		opacity : 0.8;
+		}
+		.tocenter3{
+			right:35px;
+			opacity: 1;
+		}
+		.popup{
+			opacity: 1;
+		}
+	</style>
+	<link href="https://fonts.googleapis.com/css?family=Roboto" rel="stylesheet">
+	<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
+	<script type="text/javascript" src="https://rawgithub.com/hiddentao/google-tts/master/google-tts.min.js"></script>
+</head>
+<div class="container" id="ui">
+	<!--<button id='startservice' style="position:relative;">Start Recognition</button>
+	<button id='stopservice' style="position:relative;">Stop Recognition</button>
+	<button id='sendimage' style="position:relative;">Send Single Image</button>-->
+	<div class="container" style="position:relative; overflow: hidden; height:100%; width:100%;">
+		<div class="wrapper">
+			<div class="people">	
+			</div>
+		</div>
+		<video class="video" id="video" autoplay></video>
+		<canvas class="canvas" id="cv1">
+		</canvas>
+		<div id="fromleft" class="fromleft">
+			<!--<img src="/static/wos.png">-->
+		</div>
+		<div id="fromright" class="fromright">
+			<h1 id="greet" style="padding: 5%; color:turquoise;
+			font-family: 'Roboto', sans-serif; font-size:40px; font-weight: lighter;
+			text-align:center; display:block; opacity: 1;">Welcome to W.O.S Private Event!</h1>
+		</div>
+		<div id="fromright2" class="fromright2"></div>
+		
+	</div>
+</div>
+
+<div id="detected" class="detect_box">
+	<div class="border"></div>
+	<p id="name" style="margin: 16 auto; position: relative;" type="text"></p>
+</div>
+
+<script>
+//for starting events
+let isPlaying = false;
+let gotMetadata = false;
+let detect = false;
+let person = false;
+var detected = [];
+var cached = [];
+const video = document.querySelector('video');
+const uploadWidth = 640;
+
+let imageCanvas = document.createElement('canvas');
+let imageCtx = imageCanvas.getContext("2d");
+
+let drawCanvas = document.getElementById("cv1");
+
+let drawCtx = drawCanvas.getContext("2d");
+let boxes = [];
+var i = 0;
+const constraints = {
+	video: { width: 1920, height:1080}
+};
+var localMediaStream = null;
+var lastTime = -1;
+var isrecording = false;
+var picturestack = [];
+var uploadURL = "";
+var jpeg_string = "";
+var googleTTS = new GoogleTTS('en');
+var msg = new SpeechSynthesisUtterance($("#greet").text());
+var voices = window.speechSynthesis.getVoices();
+msg.voice = voices[9]; // Note: some voices don't support altering params
+msg.voiceURI = 'native';
+msg.volume = 1; // 0 to 1
+msg.rate = 0.8; // 0.1 to 10
+msg.pitch = 1; //0 to 2
+//msg.text = 'Hello World';
+msg.lang = 'en-US';
+
+function resize_canvas(element) {
+	var w = element.offsetWidth;
+	var h = element.offsetHeight;
+	var cv = document.getElementById("cv1");
+	cv.width = w;
+	cv.height = h;
+}
+
+$(document).ready( function() {
+	navigator.mediaDevices.getUserMedia(constraints).then(handleSuccess).catch(handleError);
+	isrecording = true;
+});
+
+function welcome(name){
+	$("#greet").text('Welcome ' + name);
+}
+
+function doNtg(){
+}
+
+function displayWelcome(name){
+	//$("#detect"+i).addClass("popup");
+	$("#"+name.replace(/\s+/g, '')).find("p").text(name);
+	//i++;
+}
+
+function removeWelcome(name){
+	//setTimeout(function(){
+		$("#"+name.replace(/\s+/g, '')).closest("div").fadeOut(500, function(){
+			$("#"+name.replace(/\s+/g, '')).remove();
+		});
+	//}, 1000);
+}
+
+function handleSuccess(stream) {
+	video.srcObject = stream;
+}
+
+function handleError(error) {
+	console.error('Reeeejected!', error);
+}
+
+function getUrlParameter(name) {
+    name = name.replace(/[\[]/, '\\[').replace(/[\]]/, '\\]');
+    var regex = new RegExp('[\\?&]' + name + '=([^&#]*)');
+    var results = regex.exec(location.search);
+    return results === null ? '' : decodeURIComponent(results[1].replace(/\+/g, ' '));
+};
+
+function getvideoframe() {
+	if(!isrecording) return;
+
+	imageCanvas.width = uploadWidth;
+	imageCanvas.height = uploadWidth * (video.videoHeight / video.videoWidth);
+	//imageCanvas.width = uploadWidth;
+    //imageCanvas.height = uploadWidth * (video.videoHeight / video.videoWidth);
+
+	//drawCanvas.getContext('2d').drawImage(video, 0, 0);
+	imageCtx.drawImage(video, 0, 0, video.videoWidth, video.videoHeight, 0, 0, uploadWidth, uploadWidth *
+		(video.videoHeight / video.videoWidth));
+	jpeg_string = imageCanvas.toDataURL('image/jpeg').replace("data:image/jpeg;base64,","");
+
+    //wait approximately 16ms and run again
+    //setTimeout(getvideoframe,100);
+    sendImage();
+}
+
+function sendImage() {
+
+    //Set options as form data
+    var formdata = { data:jpeg_string };
+	//var baseurl="http://118.100.183.101:8081/";
+	if (getUrlParameter('l') == 'local')
+      		 baseurl = "https://192.168.0.43:8081/";
+	if (getUrlParameter('l') == 'local2')
+      		 baseurl = "https://localhost:8082/";
+	$.ajax({
+		type: "POST",
+		//url: "https://ml.deekie.com/enrol/recognition_result",
+
+		url: baseurl + "recognition_result",
+		data: JSON.stringify(formdata),
+		contentType: false,
+		processData: false,
+		success: function (msg) {
+			boxes = JSON.parse(msg);
+			//draw the boxes
+			drawBoxes(boxes);
+			//dispatch an event
+            let event = new CustomEvent('facialRecognition', {detail: boxes});
+            document.dispatchEvent(event);
+			//Save and send the next image
+			//getvideoframe();
+		}
+	})
+}
+
+function drawBoxes(faces)
+{
+	if(faces.length > 0){
+		//console.log(detected)
+		faces.forEach(face=>{
+			if(face.name != undefined && face.name != ""){
+				detected.push(face.name);
+			}
+		});
+		if(detected.length > 0){
+		detected.forEach(face=>{
+			console.log(face);
+			if(cached.indexOf(face) == -1 && face != undefined && face.name != ""){
+					cached.push(face);
+					var $div = $("#detected").clone(true);
+					$div.attr("id", face.replace(/\s+/g, ''));
+					$div.appendTo($(".people")).hide().fadeIn(500);
+					displayWelcome(face);
+				}
+			});
+		}
+		if(cached.length > 0){
+		cached.forEach(cache=>{
+			if(detected.indexOf(cache) == -1)
+			{
+				cached.remove(cache);
+				removeWelcome(cache.replace(/\s+/g, ''));
+			}
+		});
+	}
+	}
+	else{
+		$(".people").empty();
+		console.log("no face detected");
+		cached = [];
+	}
+	detected = [];
+	setTimeout(getvideoframe, 501);
+}
+
+function array_empty_check(a)
+{
+	if(a.length > 0)
+	{
+		a.forEach(b=>{
+			if(b == undefined || b == "")
+			return false;
+		})
+	}
+
+	return true;
+}
+
+function arraysEqual(a, b) {
+	if (a === b) return true;
+	if (a == null || b == null) return false;
+	if (a.length != b.length) return false;
+  
+	// If you don't care about the order of the elements inside
+	// the array, you should sort both arrays here.
+  
+	for (var i = 0; i < a.length; ++i) {
+	  if (a[i] !== b[i]) return false;
+	}
+	return true;
+}
+
+Array.prototype.remove = function() {
+    var what, a = arguments, L = a.length, ax;
+    while (L && this.length) {
+        what = a[--L];
+        while ((ax = this.indexOf(what)) !== -1) {
+            this.splice(ax, 1);
+        }
+    }
+    return this;
+};
+
+Array.prototype.diff = function(a) {
+    return this.filter(function(i) {return a.indexOf(i) < 0;});
+};
+
+//check if metadata is ready - we need the video size
+video.onloadedmetadata = () => {
+    console.log("video metadata ready");
+    gotMetadata = true;
+};
+
+//see if the video has started playing
+video.onplaying = () => {
+    
+    console.log("video playing");
+    isPlaying = true;
+    if (gotMetadata) {
+		//draw video on canvas looping 30fps
+		var $this = this;
+	    (function loop(){
+		drawCanvas.width = video.videoWidth;
+		drawCanvas.height = video.videoHeight;
+		var scale = drawCanvas.width/uploadWidth;
+		//console.log(scale);
+	    	icon = new Image();
+	    	icon.src = '/static/icon.png';
+	    	drawCtx.drawImage(video, 0, 0);
+			drawCtx.drawImage(icon, 20, 15, 30, 30);
+			boxes.forEach(face => {
+				drawCtx.strokeStyle = "#00aaff";
+				drawCtx.lineWidth = 2;
+				drawCtx.shadowColor = "white";
+    			drawCtx.strokeRect(face.x*scale , face.y*scale, (face.width-face.x)*scale, (face.height-face.y)*scale);
+    		});
+			drawCtx.fillStyle = "#ffffff";
+
+	    	drawCtx.font = "20px 'Roboto', sans-serif";
+	    	drawCtx.shadowColor="black";
+	    	drawCtx.shadowBlur=5;
+	    	drawCtx.lineWidth=0.2;
+	    	drawCtx.strokeText("   Powered By:", drawCanvas.width-150, 30);
+	    	drawCtx.strokeText("M360 Ideology", drawCanvas.width-150, 60);
+	    	drawCtx.fillText("   Powered By:", drawCanvas.width-150, 30);
+	    	drawCtx.fillText("M360 Ideology", drawCanvas.width-150, 60);
+
+	    	drawCtx.font = "24px 'Verdana', sans-serif";
+	    	drawCtx.shadowColor="black";
+	    	drawCtx.shadowBlur=5;
+	    	drawCtx.lineWidth=0.2;
+	    	drawCtx.strokeText("Facial Recognition", 60, 40);
+	    	drawCtx.fillText("Facial Recognition", 60, 40);
+			
+	    	setTimeout(loop, 1000/60);
+	    })();
+		$("#fromleft").addClass("tocenter");
+		$("#fromright").addClass("tocenter2");
+		$("#fromright2").addClass("tocenter3");
+		speechSynthesis.speak(msg);
+
+		setTimeout(delay, 5000);
+        //getvideoframe();
+    }
+};
+
+function isEmpty(obj) {
+    for(var key in obj) {
+        if(obj.hasOwnProperty(key))
+            return false;
+    }
+    return true;
+}
+
+function delay(){
+	$("#fromleft").removeClass("tocenter");
+	$("#fromright").removeClass("tocenter2");
+	$("#fromright2").removeClass("tocenter3");
+	setTimeout(getvideoframe, 3000);
+}
+</script>
+</html>

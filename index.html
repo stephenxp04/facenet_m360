@@ -1,0 +1,511 @@
+<!DOCTYPE html>
+<html lang="en" xmlns="http://www.w3.org/1999/html">
+<head>
+    <meta charset="UTF-8">
+    <title>Face Regconition</title>
+    <meta name="mobile-web-app-capable" content="yes" /><meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0, user-scalable=no" />
+    <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no" />
+    <link href="https://fonts.googleapis.com/css?family=Prompt" rel="stylesheet">
+    <link rel="stylesheet" type="text/css" href="style/facereg.css">
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
+    <script src="GaugeMeter.js"></script>
+    <script src="face-api.js"></script>
+    <!-- threejs.org canvas lines example -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r67/three.min.js"></script>
+</head>
+<body>
+   <div class="maincontainer">
+       <div class="maintop">
+           <div class="logo">Face Recognition</div>
+           <div class="clear"></div>
+       </div>
+       <div class="powerby">Powered By<br/>M360 Ideology Sdn Bhd</div>
+       <div class="maincontent">
+            <div class="leftqueqectn">
+                <div class="leftqueqectnttctn">
+                    <div class="lds-dual-ring"></div>
+                    <div class="leftqueqectntt">Processing Queue List</div>
+                </div>
+                <div class="currentuser">
+                    <div class="currentusertxt">Bruce Lee</div>
+                    <div class="currentusericon"></div>
+                    <div class="clear"></div>
+                </div>
+                <div class="leftqueqelistctn">
+                    <div class="leftqueqelistitem">
+                        <div class="leftqueqelistitemtxt">John Wick</div>
+                        <div class="leftqueqelistitemicon"></div>
+                        <div class="clear"></div>
+                    </div>
+                    <div class="leftqueqelistitem">
+                        <div class="leftqueqelistitemtxt">John Cena</div>
+                        <div class="leftqueqelistitemicon"></div>
+                        <div class="clear"></div>
+                    </div>
+                </div>
+            </div>
+           <div class="blurbigcircle">
+                <div class="blurbigcircleinner">
+                    <div class="blurbigcircletop">
+                        <img src="style/resources/faceicon.png"/>
+                        <div class="blurbigcirclettctn">
+                            <div class="blurbigcirclett">Welcome</div>
+                            <div class="blurbigcirclett2">Face Regconition Enrolment</div>
+                        </div>
+                    </div>
+                    <div class="blurbigcirclebtm">
+                        <div class="blurbigcirclebtmtt">
+                            <p id="enter_name" type="text">Let's fill in your name first</p>
+                        </div>
+                        <div class="blurbigcirclebtmfield">
+                            <input autofocus id="username" type="text" placeholder="Please enter your name here." />
+                            <div class="blurbigcirclebtmbtn">
+                                <button id ="enter"></button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="centerfacecirclectn startcapture" style="display: none;">
+                <video id="cam" class="webcam" autoplay style="height: 720px; width:1000px;
+                    z-index:-1;"></video>
+                <div class="centerfacecirclett">Face Regconition Set Up</div>
+                <!--<div class="centerfacecircle" id="centerfacecircle" data-percent="100" 
+                data-style="Full" data-showvalue=true data-size="405" data-theme="DarkRed-LightRed" 
+                data-stripe="2" data-animationstep="0.33" data-back="RGBa(0,0,0,.1)" 
+                data-animate_gauge_colors=true data-animate_text_colors=true data-width="5" >-->
+                <div class="centerfacecircle" id="centerfacecircle" 
+                data-style="Full" data-showvalue=true data-size="405" data-theme="DarkRed-LightRed" 
+                data-stripe="2" data-back="RGBa(0,0,0,.1)" 
+                data-animate_gauge_colors=true data-animate_text_colors=true data-width="5" >
+                    <img id="gif" src="style/resources/face-animate.gif" class="center" width="150"/>
+                    <img src="style/resources/upperleft.png" class="upperleft" width="150"/>
+                    <img src="style/resources/upperright.png" class="upperright" width="150"/>
+                    <img src="style/resources/bottomleft.png" class="bottomleft" width="150"/>
+                    <img src="style/resources/bottomright.png" class="bottomright" width="150"/>
+                </div>
+                <div class="centerfacecirclebtm">
+                    <div class="centerfacecirclebtmtt">Slowly turn your head following the indicated circular motion.</div>
+                    <div class="centerfacecirclebtn">
+                        <button id="enrol" type='button'>
+                            <div id='text'>Start Enrolment</div>
+                        </button>
+                    </div>
+                </div>
+            </div>
+            <div class="finalcenter" style="display: none;">
+                <div id="facesContainer" class="captureimglist"></div>
+                <div class="finalask">
+                    <div class="finalasktt">Please check with staff to ensure that face images are visibly clear before submitting.</div>
+                    <div class="finalaskbtnfull">
+                        <button id="submit">
+                            OK, Submit
+                        </button>
+                    </div>
+                    <div class="finalaskbtnline">
+                        <button id="retake">
+                            Retake Again?
+                        </button>
+                    </div>
+                </div>
+                <div class="clear"></div>
+                <div id="hoverCanvas" class="hovercanvas">
+                    <img src="style/resources/rubbish-bin.png" />
+                </div>
+            </div>
+            <div class="clear"></div>
+       </div>
+   </div>
+   <img id="testingimg_clone" class="captureimgitem" src="style/resources/sun.jpg"/>
+</body>
+</html>
+<script>
+    const minConfidence = 0.7
+    const MODEL_URL = '/'
+    var counter = 0;
+    var animateinternval = "";
+    let isPlaying = false;
+    let gotMetadata = false;
+    const canvas = document.createElement('canvas');
+    const constraints = {
+        audio : false,
+        video: {
+            mandatory: {maxHeight: 480, maxWidth:640}
+        }
+    };
+    var localMediaStream = null;
+    var lastTime = -1;
+    var uploadURL = "http://localhost:8081";
+    var jpeg_string = "";
+    let imageCtx = canvas.getContext("2d");
+    const video = document.querySelector('#cam');
+    var scale = 0.0;
+    var percentage = 0; 
+    var count = 0;
+    var picturestack = [];
+
+    function resize_canvas(element) {
+        var w = element.offsetWidth;
+        var h = element.offsetHeight;
+        var cv = canvas;
+        cv.width = w;
+        cv.height = h;
+    }
+
+    $(document).ready(function(){
+        run();
+        //checkStatus();
+        $('input[type=text]').on('keydown', function(e) {
+            if (e.which == 13) {
+                e.preventDefault();
+                $("#enter").click();
+            }
+        });
+        $(".captureimglist").scroll(function(){
+            $("#hoverCanvas").hide();
+        });
+    });
+
+    async function run(){
+        await faceapi.loadFaceDetectionModel(MODEL_URL)
+        await faceapi.loadFaceLandmarkModel(MODEL_URL)
+        modelLoaded = true
+    }
+
+    document.querySelector("#enter").onclick = function(){
+        var name = document.getElementById("username").value
+        console.log(name);
+        if(name == "")
+        {
+            warning_text();
+            return false
+        }
+        $(".blurbigcircle").fadeOut();
+        $(".centerfacecirclectn").fadeIn();
+        $(".centerfacecircle").gaugeMeter({percent:0});
+        navigator.mediaDevices.getUserMedia(constraints).then(handleSuccess).catch(handleError);
+        $("#gif").show();
+    }
+
+    function warning_text(){
+        $("#enter_name").text("Please enter name to start enrolment");
+        $("#enter_name").css('color', '#f00');
+        $("#enter_name").fadeOut(500);
+        $("#enter_name").fadeIn(500);
+    }
+
+    document.querySelector("#enrol").onclick = function(){
+        $("#text").text("Initializing...");
+        $("#gif").hide();
+        setTimeout(function(){
+            percentage = 0;
+            faceDetect(video, percentage);
+            $(".centerfacecirclebtn").hide()
+        }, 1000);
+    }
+
+    document.querySelector("#retake").onclick = function(){
+        $("#facesContainer").empty();
+        $(".finalcenter").fadeOut();
+        $(".centerfacecirclectn").fadeIn();
+        $(".centerfacecircle").gaugeMeter({percent:0});
+        navigator.mediaDevices.getUserMedia(constraints).then(handleSuccess).catch(handleError);
+        $("#gif").show();
+        $(".centerfacecirclebtn").show();
+        $("#text").text("Start Enrolment");
+    }
+
+    document.querySelector("#submit").onclick = function(){
+        sendImage();
+    }
+
+    async function faceDetect(videoEl, percentage){            
+        $(".centerfacecircle").gaugeMeter({percent: percentage});
+        if (percentage > 99){
+            animateCaptureImage(count);
+            $(".centerfacecirclectn").fadeOut();
+            $(".finalcenter").fadeIn();
+            videoEl.srcObject = null;
+            return false
+        }
+
+        if(videoEl.paused || videoEl.ended || !modelLoaded)
+        return false
+
+        const input = await faceapi.toNetInput(videoEl)
+        const locations = await faceapi.locateFaces(input, minConfidence)
+        const faceImages = await faceapi.extractFaces(input.inputs[0], locations)
+
+        // detect landmarks and get the aligned face image bounding boxes
+        const alignedFaceBoxes = await Promise.all(faceImages.map(
+            async (faceCanvas, i) => {
+            const faceLandmarks = await faceapi.detectLandmarks(faceCanvas)
+            return faceLandmarks.align(locations[i])
+            }
+        ))
+        const alignedFaceImages = await faceapi.extractFaces(input.inputs[0], alignedFaceBoxes)
+        // free memory for input tensors
+        input.dispose()
+        faceImages.forEach(async (faceCanvas, i) => {
+            //context = alignedFaceImages[i].getContext('2d')
+            var res = document.createElement("canvas")
+            res.setAttribute("id", "faces" + count)
+            res.setAttribute("onclick","removeThisCanvas(this)")
+            res.setAttribute("onmouseenter","mouseEnterCanvas(this)")
+            res.classList.add("captureimgitem")
+            res.width = 160
+            res.height = 160
+            res_con = res.getContext("2d")
+            res_con.drawImage(alignedFaceImages[i], 0, 0, 160, 160)
+            $('#facesContainer').append(res)
+            var jpeg_string = res.toDataURL('image/jpeg').replace("data:image/jpeg;base64,","");
+		    //var blob = canvas.toBlob(
+		    picturestack.push(jpeg_string);
+            percentage = percentage + 2.5;
+            count++      
+        })
+       
+        setTimeout(() => faceDetect(videoEl, percentage))
+    }
+
+    function displayResults(){
+        console.log($(".centerfacecircle").data("total"));
+    }
+
+    function handleSuccess(stream) {
+        video.srcObject = stream;
+        video.width = $(window).width();
+        video.height = $(window).height();
+    }
+
+    function handleError(error) {
+        console.error('Reeeejected!', error);
+    }
+    
+    function sendImage() {
+        //Set options as form data
+        var formdata = { id:document.getElementById("username").value,
+            data:picturestack };
+        
+        console.log(formdata)
+
+        $.ajax({
+            type: "POST",
+            url: uploadURL + "/enrol",
+            data: JSON.stringify(formdata),
+            contentType: false,
+            processData: false,
+            success: function (msg) {
+                console.log(msg);
+            }
+        })
+    }
+
+    function animateCaptureImage(newcounter){
+        animateinternval = setInterval(function() {
+            $("#faces" + counter).addClass("display"); 
+            counter++;
+            if(counter == newcounter){
+                clearInterval(animateinternval);
+                $(".finalask").fadeIn();
+            }
+        }, 70);
+    }
+
+    function checkStatus(){
+	count = 1;
+	
+	$.ajax({
+        type: "GET",
+        url: uploadURL + "/getStatus",
+        success: function(msg){
+		if (isEmpty(msg)){
+			let queues = JSON.parse(msg);
+			var parent = document.getElementById("table");
+			while(parent.firstChild){
+				parent.removeChild(parent.firstChild);
+			}
+
+		if(Object.keys(queues).length == 0){
+		var para = document.createElement("p")
+                var result = document.createTextNode("No enrollment task");
+                para.appendChild(result)
+                var element = document.getElementById("table");
+                element.appendChild(para);		
+}
+		queues.forEach(queue =>{
+                var para = document.createElement("p")
+        	if (count==1)
+			var result = document.createTextNode(count+" - " +queue.name+" being enrolled.");
+		else
+			var result = document.createTextNode(count+" - "+queue.name);
+        	para.appendChild(result)
+        	var element = document.getElementById("table");
+        	element.appendChild(para);
+			count+=1;
+			}
+		)
+			}
+		setTimeout(checkStatus, 2000);
+}
+        })
+};
+
+    function isEmpty(obj) {
+        for(var key in obj) {
+            if(obj.hasOwnProperty(key))
+                return true;
+        }
+        return false;
+    };
+
+    function removeThisCanvas(obj){
+        $(obj).removeClass("display").delay(500).remove();
+    }
+
+    function mouseEnterCanvas(obj){
+       var left = $(obj).position().left + 120;
+       var top = $(obj).position().top;
+       $("#hoverCanvas").show().css("left", left + "px").css("top", top + "px");
+    }
+</script>
+<script>
+    var mouseX = 0,
+        mouseY = 0,
+        windowHalfX = window.innerWidth / 2,
+        windowHalfY = window.innerHeight / 2,
+        SEPARATION = 200,
+        AMOUNTX = 10,
+        AMOUNTY = 10,
+        camera,
+        scene,
+        renderer;
+    
+    init();
+    animate();
+  
+      function init() {
+  
+        var container,
+          separation = 100,
+          amountX = 50,
+          amountY = 50,
+          particle;
+      
+      container = document.createElement( 'div' );
+      container.className = "threebg";
+      document.body.appendChild( container );
+  
+      scene = new THREE.Scene();
+  
+      renderer = new THREE.CanvasRenderer({ alpha: true }); // gradient; this can be swapped for WebGLRenderer
+      renderer.setSize( window.innerWidth, window.innerHeight );
+      container.appendChild( renderer.domElement );
+      
+      camera = new THREE.PerspectiveCamera(
+          75,
+        window.innerWidth / window.innerHeight,
+        1,
+        10000
+      );
+      camera.position.z = 100;
+  
+          // particles
+      var PI2 = Math.PI * 2;
+      var material = new THREE.SpriteCanvasMaterial({
+          color: 0xffffff,
+          program: function ( context ) {
+                  context.beginPath();
+          context.arc( 0, 0, 0.5, 0, PI2, true );
+          context.fill();
+        }
+      });
+      
+      var geometry = new THREE.Geometry();
+  
+      for ( var i = 0; i < 100; i ++ ) {
+        particle = new THREE.Sprite( material );
+        particle.position.x = Math.random() * 2 - 1;
+        particle.position.y = Math.random() * 2 - 1;
+        particle.position.z = Math.random() * 2 - 1;
+        particle.position.normalize();
+        particle.position.multiplyScalar( Math.random() * 10 + 450 );
+        particle.scale.x = particle.scale.y = 10;
+        scene.add( particle );
+        geometry.vertices.push( particle.position );
+      }
+  
+      // lines
+      var line = new THREE.Line( geometry, new THREE.LineBasicMaterial( { color: 0xffffff, opacity: 0.5 } ) );
+      scene.add( line );
+  
+      // mousey
+      document.addEventListener( 'mousemove', onDocumentMouseMove, false );
+          document.addEventListener( 'touchstart', onDocumentTouchStart, false );
+      document.addEventListener( 'touchmove', onDocumentTouchMove, false );
+          
+           window.addEventListener( 'resize', onWindowResize, false );
+  
+      } // end init();
+  
+      function onWindowResize() {
+  
+        windowHalfX = window.innerWidth / 2;
+      windowHalfY = window.innerHeight / 2;
+  
+      camera.aspect = window.innerWidth / window.innerHeight;
+      camera.updateProjectionMatrix();
+  
+      renderer.setSize( window.innerWidth, window.innerHeight );
+  
+      }
+  
+      function onDocumentMouseMove(event) {
+  
+        mouseX = event.clientX - windowHalfX;
+      mouseY = event.clientY - windowHalfY;
+  
+    }
+  
+    function onDocumentTouchStart( event ) {
+  
+          if ( event.touches.length > 1 ) {
+  
+          event.preventDefault();
+  
+        mouseX = event.touches[ 0 ].pageX - windowHalfX;
+        mouseY = event.touches[ 0 ].pageY - windowHalfY;
+  
+      }
+      }
+  
+    function onDocumentTouchMove( event ) {
+  
+        if ( event.touches.length == 1 ) {
+  
+          event.preventDefault();
+  
+        mouseX = event.touches[ 0 ].pageX - windowHalfX;
+        mouseY = event.touches[ 0 ].pageY - windowHalfY;
+  
+          }
+      }
+  
+      function animate() {
+      
+          requestAnimationFrame( animate );
+      render();
+      
+      }
+  
+      function render() {
+          
+      camera.position.x += ( mouseX - camera.position.x ) * .05;
+      camera.position.y += ( - mouseY + 200 - camera.position.y ) * .05;
+      camera.lookAt( scene.position );
+  
+      renderer.render( scene, camera );
+    
+    }
+  </script>
