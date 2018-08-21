@@ -53,7 +53,7 @@ def add_overlays(faces):
             face_bb = f.bounding_box.astype(int)
 
             if f.name is not None:
-                if f.confidence <= 0.70:
+                if f.confidence <= 0.8:
                     f.name = ''
 
             person = Object()
@@ -86,25 +86,31 @@ def recognize(image):
 
     return add_overlays(faces)
 
-def enrol(name, incremental):
+def enrol(incremental):
     global queue
     global running
 
-    if name is not None:
-        queue.append(name)
-
-    if queue and run() is False:
-        running = True
+    running = True
         #print("begin retraining" + queue[0])
-        face_recognition.encoder.retrain_model(incremental)
-        queue.pop(0)
+    face_recognition.encoder.retrain_model(incremental)
+    queue.pop(0)
+        
+    if queue:
+        return enrol(incremental=True)
+    else:
         running = False
+        return get_status()
 
-    return enrol(None, incremental=True)
+    return get_status()
 
 def run():
     global running
     return running
+
+def append_queue(name):
+    global queue
+    if name is not None:
+        queue.append(name)
 
 def get_status():
     global queue

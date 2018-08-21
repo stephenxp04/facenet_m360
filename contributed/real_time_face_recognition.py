@@ -27,34 +27,63 @@ Based on code from https://github.com/shanren7/real_time_face_recognition
 import argparse
 import sys
 import time
-import urllib2
 import cv2
-import threading
 from threading import Thread
 import face
+import memcache
 
 face_recognition = None
 face_det = None
-
+current_detected = memcache.Client(['127.0.0.1:11211'], debug=0)
 
 def add_overlays(frame, faces, frame_rate):
     global face_det
-    if faces is not None:
-        for face in faces:
-            face_bb = face.bounding_box.astype(int)
-            cv2.rectangle(frame,
-                          (face_bb[0], face_bb[1]), (face_bb[2], face_bb[3]),
-                          (0, 0, 0), 1)
-            if face.name is not None:
-                if face.confidence <= 0.85:
-                    face.name = ' '
+    global current_detected
+    # if faces is not None:
+    #     for face in faces:
+    #         face_bb = face.bounding_box.astype(int)
+    #         cv2.rectangle(frame,
+    #                       (face_bb[0], face_bb[1]), (face_bb[2], face_bb[3]),
+    #                       (0, 0, 0), 1)
+    #         if face.name is not None:
+    #             if face.confidence <= 0.85:
+    #                 face.name = ''
 
-                cv2.putText(frame, face.name, (face_bb[0], face_bb[3]),
+    #             current_detected = face.name
+
+    #             cv2.putText(frame, face.name, (face_bb[0], face_bb[3]),
+    #                         cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 255, 0),
+    #                         thickness=2, lineType=2)
+    #             cv2.putText(frame, (face.confidence * 100).astype(str) + "%", (face_bb[0], face_bb[1]),
+    #                         cv2.FONT_HERSHEY_SIMPLEX, 0.5, (255, 255, 0),
+    #                         thickness=2, lineType=2)
+    # cv2.putText(frame, str(frame_rate) + " fps", (10, 30),
+    #             cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 255, 0),
+    #             thickness=2, lineType=2)
+    
+    if faces is not None:
+        if len(faces) > 0:
+            face_bb = faces[0].bounding_box.astype(int)
+            cv2.rectangle(frame,
+                        (face_bb[0], face_bb[1]), (face_bb[2], face_bb[3]),
+                        (0, 0, 0), 1)
+            if faces[0].name is not None:
+                if faces[0].confidence <= 0.85:
+                    faces[0].name = ''
+
+                #current_detected = faces[0].name
+                current_detected.set('Name', faces[0].name)
+
+                cv2.putText(frame, faces[0].name, (face_bb[0], face_bb[3]),
                             cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 255, 0),
                             thickness=2, lineType=2)
-                cv2.putText(frame, (face.confidence * 100).astype(str) + "%", (face_bb[0], face_bb[1]),
+                cv2.putText(frame, (faces[0].confidence * 100).astype(str) + "%", (face_bb[0], face_bb[1]),
                             cv2.FONT_HERSHEY_SIMPLEX, 0.5, (255, 255, 0),
                             thickness=2, lineType=2)
+        
+        else:
+            current_detected.set('Name', '')
+
     cv2.putText(frame, str(frame_rate) + " fps", (10, 30),
                 cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 255, 0),
                 thickness=2, lineType=2)
@@ -103,10 +132,18 @@ def main(args):
         elif k == ord('r'):
             Thread(target=retrain_wrapper, verbose=True).start()
             continue
+        elif k == ord('d'):
+            current_person()
+            continue
 
     # When everything is done, release the capture
     video_capture.release()
     cv2.destroyAllWindows()
+
+def current_person():
+    global current_detected
+    print (current_detected.get('Name'))
+    return current_detected
 
 def face_reg_wrapper(frame):
     global face_recognition

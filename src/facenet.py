@@ -41,7 +41,7 @@ import re
 from tensorflow.python.platform import gfile
 import math
 from six import iteritems
-classifier_model = '/work/MachineLearning/model_checkpoints/incremental_raw.pkl'
+classifier_model = '/work/MachineLearning/model_checkpoints/lighter_model.pkl'
 classifier_filename_exp = os.path.expanduser(classifier_model)
 
 
@@ -334,10 +334,11 @@ def get_dataset(path, has_class_directories=True):
   
     return dataset, append_index
 
-def append_dataset(path, has_class_directories=True):
+def append_dataset(path, class_names, has_class_directories=True):
     with open(classifier_filename_exp, 'rb') as infile:
         emb_temp, labels_temp, class_names_temp = pickle.load(infile)
 
+    class_names_temp = class_names
     append_index = len(class_names_temp)
     dataset = []
     path_exp = os.path.expanduser(path)

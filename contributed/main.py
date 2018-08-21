@@ -18,7 +18,7 @@ from threading import Thread
 app = Flask(__name__)
 sslify = SSLify(app)
 CORS(app)
-save_path = str('/work/MachineLearning/my_dataset/train_aligned/')
+save_path = str('/work/MachineLearning/my_dataset/wos_event/')
 
 # added to put object in JSON
 class Object(object):
@@ -47,7 +47,7 @@ def start():
 @app.route('/enrol', methods=['POST'])
 def enrol():
     try:
-        if request.method == 'POST':
+        if request.method == 'POST':            
             print('POST /enrol success!')
 
         image_file = json.loads(request.data)
@@ -56,6 +56,7 @@ def enrol():
         if not os.path.exists(os.path.join(save_path+name)):
             os.mkdir(save_path+name)
 
+        web_face_recognition.append_queue(name)
         count = 0
         for images in image_file['data']:
             filename = name + str(count)
@@ -68,10 +69,10 @@ def enrol():
                 img.save(os.path.join(save_path+name+'/'+filename+".jpg"))
             count += 1
 
-        Thread(target=web_face_recognition.enrol, args=[name, incremental=True]).start()
-        #web_face_recognition.enrol(name, incremental=True)
+        if web_face_recognition.run() is False:
+            web_face_recognition.enrol(incremental=True)
 
-        return 
+        return redirect(url_for('getStatus', _external=True, _scheme='https'))
 
     except Exception as e:
         print('POST /enrol error : %s' % e)

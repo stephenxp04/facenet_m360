@@ -41,9 +41,7 @@ from sklearn.svm import SVC
 from sklearn.model_selection import ParameterGrid
 from sklearn.linear_model import SGDClassifier
 from sklearn.metrics import roc_auc_score
-import parfit.parfit as pf
 from sklearn.neighbors import KNeighborsClassifier
-from multiprocess import Pool, cpu_count
 import align.detect_face
 import facenet
 from tqdm import tqdm
@@ -51,18 +49,17 @@ from timeit import timeit
 from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import MinMaxScaler
 import time
-from joblib import Parallel, delayed
 
-gpu_memory_fraction = 0.5
-data_dir = '/work/MachineLearning/my_dataset/train_aligned'
+gpu_memory_fraction = 0.6
+data_dir = '/work/MachineLearning/my_dataset/wos_event'
 facenet_model_checkpoint = '/work/MachineLearning/model_checkpoints/20180402-114759/20180402-114759.pb'
 #classifier_model = '/work/MachineLearning/model_checkpoints/incremental_test.pkl'
-classifier_model = '/work/MachineLearning/model_checkpoints/incremental_raw.pkl'
+classifier_model = '/work/MachineLearning/model_checkpoints/lighter_model.pkl'
 
 debug = False
 sess = None
 graph = None
-model = SVC(kernel='linear', probability=True)
+model = SVC(kernel='rbf', probability=True)
 labels = None
 class_names = None
 emb_array = None
@@ -93,7 +90,6 @@ class Recognition(object):
 
     def identify(self, image):
         faces = self.detect.find_faces(image)
-#
         for i, face in enumerate(faces):
             if debug:
                 cv2.imshow("Face: " + str(i), face.image)
@@ -103,11 +99,22 @@ class Recognition(object):
             face.confidence = self.identifier.confidence_level(face)
         return faces
 
+    # def identify(self, image):
+    #     faces = self.detect.find_faces(image)
+
+    #     if len(faces) > 0:
+    #         faces = faces[0]
+
+    #     faces.embedding = self.encoder.generate_embedding(faces)
+    #     faces.name = self.identifier.identify(faces)   
+    #     faces.confidence = self.identifier.confidence_level(faces)
+    #     return faces
+
 
 class Identifier(object):
     def __init__(self):
         with open(classifier_model, 'rb') as infile:
-            self.emb_array, self.labels, self.class_names = pickle.load(infile)
+            self.emb_array, self.labels, self.class_names = pickle.load(infile, encoding='latin1')
         self.build_model()
 
     def build_model(self):
@@ -122,7 +129,7 @@ class Identifier(object):
         #labels = np.concatenate((labels , self.labels.tolist())).tolist()     #add new labels to old labels
         #class_names = np.concatenate((class_names , self.class_names))                          #append new class name to old class names
 
-        X_train, X_test, y_train, y_test = train_test_split(emb_array, labels, test_size=0.2)
+        #X_train, X_test, y_train, y_test = train_test_split(emb_array, labels, test_size=0.2)
         #self.model = SGDClassifier(loss='log', verbose=True, n_jobs=-1, n_iter=1000, alpha=1e-5, 
         #    tol=None, shuffle=True, random_state=100, penalty='l2')
        #self.model = KNeighborsClassifier(n_neighbors=1, algorithm='auto')
@@ -131,7 +138,7 @@ class Identifier(object):
         #param_grid = {'C': [1e3, 5e3, 1e4, 5e4, 1e5],
         #      'gamma': [0.0001, 0.0005, 0.001, 0.005, 0.01, 0.1], }
         #self.model = GridSearchCV(SVC(kernel='rbf', cache_size=2048, probability=True), param_grid, n_jobs=-1)
-        model.fit(X_train, y_train)
+        model.fit(emb_array, labels)
         #self.model.fit(X_train, y_train)
         end = time.time()
         print ("Fit Time: {0:4f}s".format(end - start))
@@ -188,7 +195,7 @@ class Encoder(object):
         global emb_array
         global class_names
         if incremental is True:
-            dataset, append_index = facenet.append_dataset(data_dir)
+            dataset, append_index = facenet.append_dataset(data_dir, class_names)
             paths, self.append_labels = facenet.get_image_paths_and_labels(dataset, append_index)
             self.append_class_names = [cls.name.replace('_', ' ') for cls in dataset]
 
@@ -236,7 +243,9 @@ class Encoder(object):
         if incremental is True:
             self.incremental_training(self.append_emb_array, self.append_labels, self.append_class_names)
   
-        X_train, X_test, y_train, y_test = train_test_split(emb_array, labels, test_size=0.25)
+        print(len(emb_array))
+        print(class_names)
+        #X_train, X_test, y_train, y_test = train_test_split(emb_array, labels, test_size=0.25)
         #self.model = SGDClassifier(loss='log', verbose=True, n_jobs=-1, n_iter=1000, alpha=1e-5, 
         #    tol=None, shuffle=True, random_state=100, penalty='l2')
         #self.model = SVC(kernel='rbf', probability=True, verbose=True, cache_size=1024)
@@ -246,7 +255,7 @@ class Encoder(object):
         #param_grid = {'C': [1e3, 5e3, 1e4, 5e4, 1e5],
         #      'gamma': [0.0001, 0.0005, 0.001, 0.005, 0.01, 0.1], }
         #self.model = GridSearchCV(SVC(kernel='rbf', cache_size=2048, probability=True), param_grid, n_jobs=-1)
-        model.fit(X_train, y_train)
+        model.fit(emb_array, labels)
         #self.model.fit(X_train, y_train)
         end = time.time()
         print ("Fit Time: {0:4f}s".format(end - start))
@@ -262,7 +271,7 @@ class Encoder(object):
 
 class Detection(object):
     # face detection parameters
-    minsize = 30  # minimum size of face
+    minsize = 50  # minimum size of face
     threshold = [0.6, 0.7, 0.7]  # three steps's threshold
     factor = 0.709  # scale factor
 
