@@ -27,14 +27,15 @@ Based on code from https://github.com/shanren7/real_time_face_recognition
 import argparse
 import sys
 import time
-import urllib2
 import cv2
 import face
+import memcache
 import json
 
 face_recognition = face.Recognition()
 queue = []
 running = False
+current_detected = memcache.Client(['127.0.0.1:11211'], debug=0)
 
 # added to put object in JSON
 class Object(object):
@@ -49,21 +50,25 @@ def add_overlays(faces):
     output = []
 
     if faces is not None:
-        for f in faces:
-            face_bb = f.bounding_box.astype(int)
+        if len(faces) > 0:
+            face_bb = faces[0].bounding_box.astype(int)
 
-            if f.name is not None:
-                if f.confidence <= 0.8:
-                    f.name = ''
-
+            if faces[0].name is not None:
+                if faces[0].confidence <= 0.8:
+                    faces[0].name = ''
+            
+            current_detected.set('Name', faces[0].name)
             person = Object()
-            person.name = f.name
-            person.score = f.confidence
+            person.name = faces[0].name
+            person.score = faces[0].confidence
             person.x = float(face_bb[0])
             person.y = float(face_bb[1])
             person.width = float(face_bb[2])
             person.height = float(face_bb[3])
             output.append(person)
+
+        else:
+            current_detected.set('Name', '')
 
         outputJson = json.dumps([ob.__dict__ for ob in output])
         return outputJson

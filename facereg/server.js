@@ -24,7 +24,8 @@ app.use(express.static(path.join(viewsDir, '../dist')))
 app.use(express.static(path.join(__dirname, './node_modules/axios/dist')))
 
 app.get('/', (req, res) => res.redirect('/face_detection'))
-app.get('/face_detection_video', (req, res) => res.sendFile(path.join(__dirname, 'index.html')))
+app.get('/face_detection_video', (req, res) => 
+res.sendFile(path.join(__dirname, 'index.html')))
 
 var server = https.createServer(options,app).listen(8080, () => console.log('Listening on port 8080!'))
 

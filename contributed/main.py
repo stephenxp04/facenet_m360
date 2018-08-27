@@ -13,12 +13,17 @@ import time
 import subprocess as sp
 import requests
 import threading
+from pymongo import MongoClient
 from threading import Thread
 
 app = Flask(__name__)
 sslify = SSLify(app)
 CORS(app)
 save_path = str('/work/MachineLearning/my_dataset/wos_event/')
+client = MongoClient('mongodb://localhost:27017/')
+#Accessing databases
+db = client['attendance']
+name_list = db['name_list']
 
 # added to put object in JSON
 class Object(object):
@@ -95,11 +100,12 @@ def getStatus():
 @app.route('/recognition_result', methods=['POST'])
 def face_recognition():
     try:
-        image_file = json.loads(request.data)
+        image_file = json.loads(request.data.decode('utf-8'))
         img = base64.b64decode(image_file['data'])
         img_array = np.fromstring(img, np.uint8)
         imgdata = cv2.imdecode(img_array, cv2.IMREAD_COLOR)
         boxes = web_face_recognition.recognize(imgdata)
+        boxes['name'] = name_list.find_one({'person': boxes['name']})
 
         return boxes
 
